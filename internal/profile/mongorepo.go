@@ -112,3 +112,35 @@ func (r *mongoRepository) GetAll(ctx context.Context, page, limit int) ([]*profi
 
 	return profiles, int(count), nil
 }
+
+func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	coll := r.client.Database(r.db).Collection(r.collection)
+
+	// parse query to bson.M and set pagination
+	mongoQuery := bson.M(query)
+	findOptions := options.Find().
+		SetSkip(int64((currentPage - 1) * perPage)).
+		SetLimit(int64(perPage))
+
+	cursor, err := coll.Find(ctx, mongoQuery, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*profile.Profile
+	for cursor.Next(ctx) {
+		var profile profile.Profile
+		if err := cursor.Decode(&profile); err != nil {
+			return nil, 0, err
+		}
+		results = append(results, &profile)
+	}
+
+	totalItems, err := coll.CountDocuments(ctx, mongoQuery)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return results, int(totalItems), nil
+}

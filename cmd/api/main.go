@@ -60,6 +60,8 @@ func main() {
 	router.GET("/profiles/:id", profileHandler.GetByID)
 	router.GET("/profiles", profileHandler.GetAll)
 
+	router.POST("/profiles/query", profileHandler.Query)
+
 	if err = router.Run(":8030"); err != nil {
 		panic(err)
 	}

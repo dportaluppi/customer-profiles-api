@@ -151,3 +151,37 @@ func (h *Handler) GetAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *Handler) Query(c *gin.Context) {
+	var query map[string]interface{}
+	if err := c.BindJSON(&query); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+
+	currentPage, _ := strconv.Atoi(c.DefaultQuery("currentPage", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
+
+	if currentPage < 1 {
+		currentPage = 1
+	}
+	if perPage <= 0 {
+		perPage = 50
+	}
+
+	ctx := c.Request.Context()
+	results, totalItems, err := h.service.Query(ctx, query, currentPage, perPage)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+
+	response := gin.H{
+		"results":    results,
+		"pagination": pagination,
+	}
+
+	c.JSON(http.StatusOK, response)
+}

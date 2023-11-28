@@ -30,6 +30,7 @@ type Deleter interface {
 type Getter interface {
 	GetByID(ctx context.Context, profileID string) (*Profile, error)
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
+	Query(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error)
 }
 
 type Repository interface {
@@ -37,4 +38,5 @@ type Repository interface {
 	GetByID(ctx context.Context, profileID string) (*Profile, error)
 	Delete(ctx context.Context, profileID string) error
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
+	ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error)
 }

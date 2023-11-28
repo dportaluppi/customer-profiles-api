@@ -138,6 +138,10 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*p
 	return profiles, len(profiles), nil
 }
 
+func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	panic("implement me")
+}
+
 // calculateDateRangeForPage returns the start and end times for pagination.
 // 'end' is the current time, and 'start' is calculated based on the page number and limit.
 func calculateDateRangeForPage(page, limit int) (start, end time.Time) {
