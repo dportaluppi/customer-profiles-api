@@ -149,11 +149,11 @@ func calculateDateRangeForPage(page, limit int) (start, end time.Time) {
 func (r *AerospikeRepository) getProfileIDsFromIndex(ctx context.Context, start, end time.Time) ([]string, error) {
 	var profileIDs []string
 
-	// Scan policy
+	// Define scan policy to include bin data in the results
 	scanPolicy := aerospike.NewScanPolicy()
 	scanPolicy.IncludeBinData = true
 
-	// Scan the index
+	// Perform the scan on the secondary index set
 	recordset, err := r.client.ScanAll(scanPolicy, r.namespace, "profileIndexSet")
 	if err != nil {
 		return nil, err
@@ -164,20 +164,25 @@ func (r *AerospikeRepository) getProfileIDsFromIndex(ctx context.Context, start,
 			return nil, result.Err
 		}
 
-		if result.Record == nil || result.Record.Key == nil || result.Record.Key.Value() == nil {
-			continue // Or handle the error as needed
+		// Skip if the record is nil
+		if result.Record == nil {
+			continue
 		}
 
-		// Index key is a combination of date and ID, like "20210325:1234"
-		indexKey := result.Record.Key.Value().String()
-		createdAtStr, profileID := parseIndexKey(indexKey)
+		// Assume the bins include a reference to the profile ID
+		profileID, ok := result.Record.Bins["profileRef"].(string)
+		if !ok {
+			continue // Or handle as an error if needed
+		}
 
+		// Extract createdAt string from the index key and check if it's within the range
+		createdAtStr := getCreatedAtStrFromIndexKey(profileID)
 		createdAt, err := time.Parse("20060102", createdAtStr)
 		if err != nil {
 			continue // Or handle the error as needed
 		}
 
-		// Check if the date is within the range
+		// Check if the createdAt date is within the specified range
 		if createdAt.After(start) && createdAt.Before(end) {
 			profileIDs = append(profileIDs, profileID)
 		}
@@ -186,12 +191,13 @@ func (r *AerospikeRepository) getProfileIDsFromIndex(ctx context.Context, start,
 	return profileIDs, nil
 }
 
-func parseIndexKey(indexKey string) (string, string) {
+// getCreatedAtStrFromIndexKey extracts the date part from the index key
+func getCreatedAtStrFromIndexKey(indexKey string) string {
 	parts := strings.Split(indexKey, ":")
-	if len(parts) != 2 {
-		return "", ""
+	if len(parts) >= 2 {
+		return parts[0] // Return the date part
 	}
-	return parts[0], parts[1] // Returns the date and the ID
+	return ""
 }
 
 func (r *AerospikeRepository) addSecondaryIndex(profile *profile.Profile, writePolicy *aerospike.WritePolicy) error {
