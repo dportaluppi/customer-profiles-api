@@ -38,6 +38,13 @@ type Aerospike struct {
 	Namespace string `default:"customers-profiles-api"`
 }
 
+type Mongo struct {
+	Uri               string        `required:"true" default:"mongodb://localhost:27017"`
+	Timeout           time.Duration `default:"1s"`
+	ConnectionTimeout time.Duration `split_words:"true" default:"1s"`
+	DB                string        `default:"customers-profiles-api"`
+}
+
 type Config struct {
 	Environment config.Environment
 	Trace       Trace
@@ -46,6 +53,7 @@ type Config struct {
 	Server      Server
 	Log         logging.Config
 	Aerospike   Aerospike
+	Mongo       Mongo
 }
 
 // Load returns a hydrated Config object for the current environment.

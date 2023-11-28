@@ -123,18 +123,31 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 // GetAll manages fetching all profiles with pagination.
 func (h *Handler) GetAll(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	currentPage, _ := strconv.Atoi(c.DefaultQuery("currentPage", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
+
+	if currentPage < 1 {
+		currentPage = 1
+	}
+	if perPage <= 0 {
+		perPage = 50
+	}
 
 	ctx := c.Request.Context()
-	profiles, count, err := h.service.GetAll(ctx, page, limit)
+	profiles, totalItems, err := h.service.GetAll(ctx, currentPage, perPage)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
-		// TODO: Handle error more specifically if needed.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"profiles": profiles, "count": count})
+	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+
+	response := gin.H{
+		"profiles":   profiles,
+		"pagination": pagination,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
