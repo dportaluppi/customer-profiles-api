@@ -14,8 +14,8 @@ type Profile struct {
 }
 
 type Channel struct {
-	ID         string `json:"id" bson:"id" binding:"required"`
-	Attributes any    `json:"attributes" bson:"attributes"`
+	ID         string         `json:"id" bson:"id" binding:"required"`
+	Attributes map[string]any `json:"attributes" bson:"attributes"`
 }
 
 type Upserter interface {
