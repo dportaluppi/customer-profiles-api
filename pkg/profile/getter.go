@@ -10,7 +10,7 @@ type getter struct {
 	repo Repository
 }
 
-func NewGetter(repo Repository) *getter {
+func NewGetter(repo Repository) Getter {
 	return &getter{repo: repo}
 }
 
@@ -36,4 +36,9 @@ func (s *getter) GetAll(ctx context.Context, page, limit int) ([]*Profile, int, 
 		return nil, 0, errors.WithStack(err)
 	}
 	return profiles, count, nil
+}
+
+func (s *getter) Query(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error) {
+	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
+	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
 }
