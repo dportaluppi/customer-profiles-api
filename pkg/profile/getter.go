@@ -3,7 +3,6 @@ package profile
 import (
 	"context"
 	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // getter implements the profile retrieval service.
@@ -44,7 +43,7 @@ func (s *getter) Query(ctx context.Context, query map[string]any, currentPage, p
 	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
 }
 
-func (s *getter) Pipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*Profile, int, error) {
+func (s *getter) Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error) {
 	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
 	return s.repo.ExecutePipeline(ctx, pipeline, currentPage, perPage)
 }

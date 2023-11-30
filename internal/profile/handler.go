@@ -205,7 +205,7 @@ func (h *Handler) QueryJsonLogic(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	results, totalItems, err := h.service.Pipeline(ctx, mongoQuery, currentPage, perPage)
+	results, totalItems, err := h.service.Pipeline(ctx, mongoQuery.Map(), currentPage, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

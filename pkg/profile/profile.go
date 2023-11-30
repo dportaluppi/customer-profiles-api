@@ -2,7 +2,6 @@ package profile
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
 
@@ -32,7 +31,7 @@ type Getter interface {
 	GetByID(ctx context.Context, profileID string) (*Profile, error)
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
 	Query(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*Profile, int, error)
-	Pipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*Profile, int, error)
+	Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error)
 }
 
 type Repository interface {
@@ -41,5 +40,5 @@ type Repository interface {
 	Delete(ctx context.Context, profileID string) error
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
 	ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error)
-	ExecutePipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*Profile, int, error)
+	ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error)
 }

@@ -145,7 +145,7 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 	return results, int(totalItems), nil
 }
 
-func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*profile.Profile, int, error) {
+func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	// Convertir la consulta map a bson.D para la etapa de match
