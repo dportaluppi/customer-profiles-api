@@ -3,6 +3,7 @@ package profile
 import (
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 	"github.com/gin-gonic/gin"
+	gojsonlogicmongodb "github.com/kubeesio/go-jsonlogic-mongodb"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
@@ -171,6 +172,40 @@ func (h *Handler) Query(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	results, totalItems, err := h.service.Query(ctx, query, currentPage, perPage)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+
+	response := gin.H{
+		"results":    results,
+		"pagination": pagination,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) QueryJsonLogic(c *gin.Context) {
+	mongoQuery, err := gojsonlogicmongodb.Convert(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error converting JSON logic: " + err.Error()})
+		return
+	}
+
+	currentPage, _ := strconv.Atoi(c.DefaultQuery("currentPage", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
+
+	if currentPage < 1 {
+		currentPage = 1
+	}
+	if perPage <= 0 {
+		perPage = 50
+	}
+
+	ctx := c.Request.Context()
+	results, totalItems, err := h.service.Pipeline(ctx, mongoQuery, currentPage, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -144,3 +144,54 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 
 	return results, int(totalItems), nil
 }
+
+func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	coll := r.client.Database(r.db).Collection(r.collection)
+
+	// Convertir la consulta map a bson.D para la etapa de match
+	matchStage := bson.D{{"$match", bson.D{{"$expr", pipeline}}}}
+
+	// Pipeline para contar los documentos que coinciden con el filtro
+	countPipeline := mongo.Pipeline{
+		matchStage,
+		{{"$count", "total"}},
+	}
+
+	countCursor, err := coll.Aggregate(ctx, countPipeline)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer countCursor.Close(ctx)
+
+	// Estructura para almacenar el resultado del conteo
+	var countResult struct{ Total int }
+	if countCursor.Next(ctx) {
+		if err := countCursor.Decode(&countResult); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	// Agregar etapas de paginación al pipeline original
+	pipelineWithPagination := mongo.Pipeline{
+		matchStage,
+		{{"$skip", int64((currentPage - 1) * perPage)}},
+		{{"$limit", int64(perPage)}},
+	}
+
+	cursor, err := coll.Aggregate(ctx, pipelineWithPagination)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*profile.Profile
+	for cursor.Next(ctx) {
+		var profile profile.Profile
+		if err := cursor.Decode(&profile); err != nil {
+			return nil, 0, err
+		}
+		results = append(results, &profile)
+	}
+
+	return results, countResult.Total, nil
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"strings"
 	"time"
 )
@@ -139,6 +140,9 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*p
 }
 
 func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	panic("implement me")
+}
+func (r *aerospikeRepository) ExecutePipeline(ctx context.Context, pipeline bson.D, currentPage, perPage int) ([]*profile.Profile, int, error) {
 	panic("implement me")
 }
 

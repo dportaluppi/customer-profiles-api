@@ -61,6 +61,7 @@ func main() {
 	router.GET("/profiles", profileHandler.GetAll)
 
 	router.POST("/profiles/query", profileHandler.Query)
+	router.POST("/profiles/queries/jsonlogic", profileHandler.QueryJsonLogic)
 
 	if err = router.Run(":8030"); err != nil {
 		panic(err)
