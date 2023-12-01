@@ -1,13 +1,4 @@
-package profile
-
-var (
-	ErrProfileIDMissing            = NewErrID("missing profile id")
-	ErrProfileInvalid              = NewErrInvalid("invalid profile data")
-	ErrNotFound                    = NewErrNotFound("profile not found")
-	ErrProfileConflict             = NewErrConflict("profile conflict occurred")
-	ErrInternalError               = NewErrInternalError("internal error")
-	ErrInvalidPaginationParameters = NewErrInvalid("invalid pagination parameters")
-)
+package pkg
 
 type ErrIDType struct {
 	msg string

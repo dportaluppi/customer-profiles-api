@@ -1,7 +1,8 @@
-package profile
+package user
 
 import (
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
+	"github.com/dportaluppi/customer-profiles-api/pkg"
+	"github.com/dportaluppi/customer-profiles-api/pkg/user"
 	"github.com/gin-gonic/gin"
 	gojsonlogicmongodb "github.com/kubeesio/go-jsonlogic-mongodb"
 	"github.com/pkg/errors"
@@ -10,20 +11,20 @@ import (
 	"strconv"
 )
 
-// service define business logic for profile.
+// service define business logic for user.
 type service struct {
-	profile.Upserter
-	profile.Deleter
-	profile.Getter
+	user.Upserter
+	user.Deleter
+	user.Getter
 }
 
-// Handler rest api for profile.
+// Handler rest api for user.
 type Handler struct {
 	service *service
 }
 
-// NewHandler creates a new handler for profile.
-func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profile.Getter) *Handler {
+// NewHandler creates a new handler for user.
+func NewHandler(upserter user.Upserter, deleter user.Deleter, getter user.Getter) *Handler {
 	s := &service{
 		Upserter: upserter,
 		Deleter:  deleter,
@@ -32,16 +33,16 @@ func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profi
 	return &Handler{service: s}
 }
 
-// Create manages the creation of a new profile.
+// Create manages the creation of a new user.
 func (h *Handler) Create(c *gin.Context) {
-	var p profile.Profile
+	var p user.User
 	if err := c.ShouldBindJSON(&p); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx := c.Request.Context()
-	createdProfile, err := h.service.Create(ctx, &p)
+	createdUser, err := h.service.Create(ctx, &p)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -50,13 +51,13 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, createdProfile)
+	c.JSON(http.StatusOK, createdUser)
 }
 
-// Update manages the update of an existing profile.
+// Update manages the update of an existing user.
 func (h *Handler) Update(c *gin.Context) {
-	var profile profile.Profile
-	if err := c.ShouldBindJSON(&profile); err != nil {
+	var user user.User
+	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -68,7 +69,7 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	updatedProfile, err := h.service.Update(ctx, id, &profile)
+	updatedProfile, err := h.service.Update(ctx, id, &user)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -80,7 +81,7 @@ func (h *Handler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedProfile)
 }
 
-// Delete manages the deletion of a profile.
+// Delete manages the deletion of a user.
 func (h *Handler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -98,10 +99,10 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Profile deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
 }
 
-// GetByID manages fetching a profile by its ID.
+// GetByID manages fetching a user by its ID.
 func (h *Handler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -110,7 +111,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	profile, err := h.service.GetByID(ctx, id)
+	user, err := h.service.GetByID(ctx, id)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -119,7 +120,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusOK, user)
 }
 
 // GetAll manages fetching all profiles with pagination.
@@ -143,7 +144,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 		return
 	}
 
-	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+	pagination := pkg.NewPagination(currentPage, perPage, totalItems)
 
 	response := gin.H{
 		"profiles":   profiles,
@@ -177,7 +178,7 @@ func (h *Handler) Query(c *gin.Context) {
 		return
 	}
 
-	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+	pagination := pkg.NewPagination(currentPage, perPage, totalItems)
 
 	response := gin.H{
 		"results":    results,
@@ -211,7 +212,7 @@ func (h *Handler) QueryJsonLogic(c *gin.Context) {
 		return
 	}
 
-	pagination := profile.NewPagination(currentPage, perPage, totalItems)
+	pagination := pkg.NewPagination(currentPage, perPage, totalItems)
 
 	response := gin.H{
 		"results":    results,

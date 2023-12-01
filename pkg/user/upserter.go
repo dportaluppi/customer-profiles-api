@@ -1,4 +1,4 @@
-package profile
+package user
 
 import (
 	"context"
@@ -14,20 +14,20 @@ func NewUpserter(repo Repository) *upserter {
 	return &upserter{repo: repo}
 }
 
-func (s *upserter) Create(ctx context.Context, profile *Profile) (*Profile, error) {
+func (s *upserter) Create(ctx context.Context, profile *User) (*User, error) {
 	// TODO: business logic to create a profile
 	if profile == nil {
 		return nil, ErrProfileInvalid
 	}
 
-	p, err := s.repo.Updater(ctx, profile)
+	p, err := s.repo.Upsert(ctx, profile)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 	return p, nil
 }
 
-func (s *upserter) Update(ctx context.Context, id string, profile *Profile) (*Profile, error) {
+func (s *upserter) Update(ctx context.Context, id string, profile *User) (*User, error) {
 	// TODO: business logic to create a profile
 	if id == "" {
 		return nil, ErrProfileIDMissing
@@ -41,7 +41,7 @@ func (s *upserter) Update(ctx context.Context, id string, profile *Profile) (*Pr
 	profile.CreatedAt = oldProfile.CreatedAt
 	profile.UpdatedAt = oldProfile.UpdatedAt
 
-	p, err := s.repo.Updater(ctx, profile)
+	p, err := s.repo.Upsert(ctx, profile)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}

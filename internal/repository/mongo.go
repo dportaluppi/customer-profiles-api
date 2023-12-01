@@ -1,122 +1,136 @@
-package profile
+package repository
 
 import (
 	"context"
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
-type mongoRepository struct {
+// MongoRepository is a generic repository for MongoDB.
+type MongoRepository[T Entity] struct {
 	client     *mongo.Client
 	db         string
 	collection string
 }
 
-func NewMongoRepository(client *mongo.Client, db string) profile.Repository {
-	return &mongoRepository{
+// NewMongoRepository creates a new instance of MongoRepository.
+func NewMongoRepository[T Entity](client *mongo.Client, db, collection string) *MongoRepository[T] {
+	return &MongoRepository[T]{
 		client:     client,
 		db:         db,
-		collection: "profiles",
+		collection: collection,
 	}
 }
-func (r *mongoRepository) Updater(ctx context.Context, profile *profile.Profile) (*profile.Profile, error) {
+
+func (r *MongoRepository[T]) Upsert(ctx context.Context, entity T) (T, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	var objID primitive.ObjectID
 	var err error
 
-	isNew := profile.ID == ""
+	isNew := entity.GetID() == ""
 	if isNew {
 		objID = primitive.NewObjectID()
-		profile.CreatedAt = now()
+		entity.SetID(objID.Hex())
+		entity.SetCreatedAt(time.Now())
 	} else {
-		objID, err = primitive.ObjectIDFromHex(profile.ID)
+		objID, err = primitive.ObjectIDFromHex(entity.GetID())
 		if err != nil {
-			return nil, err
+			return *new(T), err
 		}
-		profile.UpdatedAt = now()
+		entity.SetUpdatedAt(time.Now())
 	}
 
-	update := bson.M{"$set": bson.M{
-		"channels":   profile.Channels,
-		"attributes": profile.Attributes,
-		"createdAt":  profile.CreatedAt,
-		"updatedAt":  profile.UpdatedAt,
-	}}
-
+	update := bson.M{"$set": entity}
 	opts := options.Update().SetUpsert(true)
 
 	_, err = coll.UpdateOne(ctx, bson.M{"_id": objID}, update, opts)
 	if err != nil {
-		return nil, err
+		return *new(T), err
 	}
 
-	if isNew {
-		profile.ID = objID.Hex()
-	}
-
-	return profile, nil
+	return entity, nil
 }
 
-func (r *mongoRepository) GetByID(ctx context.Context, profileID string) (*profile.Profile, error) {
+// GetByID finds an entity by its ID.
+func (r *MongoRepository[T]) GetByID(ctx context.Context, id string) (T, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
-	objID, err := primitive.ObjectIDFromHex(profileID)
+
+	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, err
+		return *new(T), err
 	}
+
 	filter := bson.M{"_id": objID}
-	profile := &profile.Profile{}
-	err = coll.FindOne(ctx, filter).Decode(profile)
+
+	var result = *new(T)
+
+	err = coll.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
-	return profile, nil
+
+	return result, nil
 }
 
-func (r *mongoRepository) Delete(ctx context.Context, profileID string) error {
+// Delete removes an entity by its ID.
+func (r *MongoRepository[T]) Delete(ctx context.Context, id string) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
-	objID, err := primitive.ObjectIDFromHex(profileID)
+
+	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
+
 	filter := bson.M{"_id": objID}
 	_, err = coll.DeleteOne(ctx, filter)
 	return err
 }
 
-func (r *mongoRepository) GetAll(ctx context.Context, page, limit int) ([]*profile.Profile, int, error) {
+// GetAll retrieves all entities, with pagination.
+func (r *MongoRepository[T]) GetAll(ctx context.Context, page, limit int) ([]T, int, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
+
 	findOptions := options.Find().SetSkip(int64((page - 1) * limit)).SetLimit(int64(limit))
+
 	cursor, err := coll.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
-	var profiles []*profile.Profile
+	var results []T
+
 	for cursor.Next(ctx) {
-		var profile profile.Profile
-		if err := cursor.Decode(&profile); err != nil {
-			return nil, 0, err
+		var entity = *new(T)
+		if err := cursor.Decode(&entity); err != nil {
+			return nil, 0, errors.WithStack(err)
 		}
-		profiles = append(profiles, &profile)
+		results = append(results, entity)
 	}
 
 	count, err := coll.CountDocuments(ctx, bson.M{})
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, errors.WithStack(err)
 	}
 
-	return profiles, int(count), nil
+	return results, int(count), nil
 }
 
-func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
+// ExecuteQuery executes a query and returns a slice of entities with pagination.
+func (r *MongoRepository[T]) ExecuteQuery(
+	ctx context.Context,
+	query map[string]any,
+	currentPage,
+	perPage int,
+) ([]T, int, error) {
+
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	// parse query to bson.M and set pagination
 	mongoQuery := bson.M(query)
 	findOptions := options.Find().
 		SetSkip(int64((currentPage - 1) * perPage)).
@@ -128,13 +142,14 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 	}
 	defer cursor.Close(ctx)
 
-	var results []*profile.Profile
+	var results []T
+
 	for cursor.Next(ctx) {
-		var profile profile.Profile
-		if err := cursor.Decode(&profile); err != nil {
+		var entity = *new(T)
+		if err := cursor.Decode(&entity); err != nil {
 			return nil, 0, err
 		}
-		results = append(results, &profile)
+		results = append(results, entity)
 	}
 
 	totalItems, err := coll.CountDocuments(ctx, mongoQuery)
@@ -145,13 +160,18 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 	return results, int(totalItems), nil
 }
 
-func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
+// ExecutePipeline executes an aggregation pipeline and returns a slice of entities with pagination.
+func (r *MongoRepository[T]) ExecutePipeline(
+	ctx context.Context,
+	pipeline map[string]any,
+	currentPage,
+	perPage int,
+) ([]T, int, error) {
+
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	// Convertir la consulta map a bson.D para la etapa de match
 	matchStage := bson.D{{"$match", bson.D{{"$expr", pipeline}}}}
 
-	// Pipeline para contar los documentos que coinciden con el filtro
 	countPipeline := mongo.Pipeline{
 		matchStage,
 		{{"$count", "total"}},
@@ -163,7 +183,6 @@ func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline map[stri
 	}
 	defer countCursor.Close(ctx)
 
-	// Estructura para almacenar el resultado del conteo
 	var countResult struct{ Total int }
 	if countCursor.Next(ctx) {
 		if err := countCursor.Decode(&countResult); err != nil {
@@ -171,7 +190,6 @@ func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline map[stri
 		}
 	}
 
-	// Agregar etapas de paginación al pipeline original
 	pipelineWithPagination := mongo.Pipeline{
 		matchStage,
 		{{"$skip", int64((currentPage - 1) * perPage)}},
@@ -184,13 +202,14 @@ func (r *mongoRepository) ExecutePipeline(ctx context.Context, pipeline map[stri
 	}
 	defer cursor.Close(ctx)
 
-	var results []*profile.Profile
+	var results []T
+
 	for cursor.Next(ctx) {
-		var profile profile.Profile
-		if err := cursor.Decode(&profile); err != nil {
+		var entity = *new(T)
+		if err := cursor.Decode(&entity); err != nil {
 			return nil, 0, err
 		}
-		results = append(results, &profile)
+		results = append(results, entity)
 	}
 
 	return results, countResult.Total, nil
