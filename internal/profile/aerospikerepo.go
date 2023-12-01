@@ -1,10 +1,10 @@
-package user
+package profile
 
 import (
 	"context"
 	"fmt"
 	"github.com/aerospike/aerospike-client-go/v6"
-	"github.com/dportaluppi/customer-profiles-api/pkg/user"
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"strings"
@@ -17,7 +17,7 @@ type aerospikeRepository struct {
 	set       string
 }
 
-func NewAerospikeRepository(client *aerospike.Client, namespace string) user.Repository {
+func NewAerospikeRepository(client *aerospike.Client, namespace string) profile.Repository {
 	return &aerospikeRepository{
 		client:    client,
 		namespace: namespace,
@@ -25,7 +25,7 @@ func NewAerospikeRepository(client *aerospike.Client, namespace string) user.Rep
 	}
 }
 
-func (r *aerospikeRepository) Upsert(ctx context.Context, profile *user.User) (*user.User, error) {
+func (r *aerospikeRepository) Upsert(ctx context.Context, profile *profile.Profile) (*profile.Profile, error) {
 	var err error
 	isNew := profile.ID == ""
 	if isNew {
@@ -65,7 +65,7 @@ func now() *time.Time {
 	return &n
 }
 
-func (r *aerospikeRepository) GetByID(ctx context.Context, id string) (*user.User, error) {
+func (r *aerospikeRepository) GetByID(ctx context.Context, id string) (*profile.Profile, error) {
 	key, err := aerospike.NewKey(r.namespace, r.set, id)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (r *aerospikeRepository) GetByID(ctx context.Context, id string) (*user.Use
 	}
 
 	if record == nil {
-		return nil, user.ErrNotFound
+		return nil, profile.ErrNotFound
 	}
 
 	return recordToProfile(record)
@@ -111,13 +111,13 @@ func (r *aerospikeRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	if !existed {
-		return user.ErrNotFound
+		return profile.ErrNotFound
 	}
 
 	return nil
 }
 
-func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*user.User, int, error) {
+func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*profile.Profile, int, error) {
 	// Get the profile IDs from the index {date}:{id}
 	start, end := calculateDateRangeForPage(page, limit)
 	profileIDs, err := r.getProfileIDsFromIndex(ctx, start, end)
@@ -126,7 +126,7 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*u
 	}
 
 	// Get the profiles by ID
-	profiles := make([]*user.User, 0, limit)
+	profiles := make([]*profile.Profile, 0, limit)
 	for _, id := range profileIDs {
 		p, err := r.GetByID(ctx, id)
 		if err != nil {
@@ -138,10 +138,10 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*u
 	return profiles, len(profiles), nil
 }
 
-func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*user.User, int, error) {
+func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
 	panic("implement me")
 }
-func (r *aerospikeRepository) ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*user.User, int, error) {
+func (r *aerospikeRepository) ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
 	panic("implement me")
 }
 
@@ -207,7 +207,7 @@ func getCreatedAtStrFromIndexKey(indexKey string) string {
 	return ""
 }
 
-func (r *aerospikeRepository) addSecondaryIndex(profile *user.User, writePolicy *aerospike.WritePolicy) error {
+func (r *aerospikeRepository) addSecondaryIndex(profile *profile.Profile, writePolicy *aerospike.WritePolicy) error {
 	// build the key for the index
 	indexKeyString := fmt.Sprintf("%s:%s", profile.CreatedAt.Format("20060102"), profile.ID)
 	indexKey, err := aerospike.NewKey(r.namespace, "profileIndexSet", indexKeyString)
@@ -247,7 +247,7 @@ func (r *aerospikeRepository) deleteSecondaryIndex(ctx context.Context, id strin
 }
 
 // ------------ Write ------------
-func profileToBins(profile *user.User) []*aerospike.Bin {
+func profileToBins(profile *profile.Profile) []*aerospike.Bin {
 	var bins []*aerospike.Bin
 
 	// Bins for simple fields
@@ -296,9 +296,9 @@ func timestampToBin(binName string, timestamp *time.Time) *aerospike.Bin {
 }
 
 // ------------ Read ------------
-func recordToProfile(record *aerospike.Record) (*user.User, error) {
+func recordToProfile(record *aerospike.Record) (*profile.Profile, error) {
 	if record == nil {
-		return nil, user.ErrNotFound
+		return nil, profile.ErrNotFound
 	}
 
 	/*
@@ -309,7 +309,7 @@ func recordToProfile(record *aerospike.Record) (*user.User, error) {
 
 	*/
 
-	profile := &user.User{
+	profile := &profile.Profile{
 		ID: getStringFromRecord(record.Bins["profileId"]),
 		/*
 			Name:      getStringFromRecord(record.Bins["name"]),

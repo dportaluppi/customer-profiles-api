@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/aerospike/aerospike-client-go/v6"
 	"github.com/dportaluppi/customer-profiles-api/internal/config"
+	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
 	"github.com/dportaluppi/customer-profiles-api/internal/repository"
-	iprofile "github.com/dportaluppi/customer-profiles-api/internal/user"
-	"github.com/dportaluppi/customer-profiles-api/pkg/user"
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -44,14 +44,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// User
+	// Profile
 	// repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
 	// repo = iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
-	users := repository.NewMongoRepository[*user.User](mongoClient, cfg.Mongo.DB, "users")
+	users := repository.NewMongoRepository[*profile.Profile](mongoClient, cfg.Mongo.DB, "users")
 	uHandler := iprofile.NewHandler(
-		user.NewUpserter(users),
-		user.NewDeleter(users),
-		user.NewGetter(users),
+		profile.NewSaver(users),
+		profile.NewDeleter(users),
+		profile.NewGetter(users),
 	)
 
 	// Routes
