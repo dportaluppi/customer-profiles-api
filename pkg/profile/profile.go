@@ -45,25 +45,25 @@ type Channel struct {
 }
 
 type Upserter interface {
-	Create(ctx context.Context, user *Profile) (*Profile, error)
-	Update(ctx context.Context, id string, user *Profile) (*Profile, error)
+	Create(ctx context.Context, profile *Profile) (*Profile, error)
+	Update(ctx context.Context, id string, profile *Profile) (*Profile, error)
 }
 
 type Deleter interface {
-	Delete(ctx context.Context, userID string) error
+	Delete(ctx context.Context, profileID string) error
 }
 
 type Getter interface {
-	GetByID(ctx context.Context, userID string) (*Profile, error)
+	GetByID(ctx context.Context, profileID string) (*Profile, error)
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
 	Query(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*Profile, int, error)
 	Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error)
 }
 
 type Repository interface {
-	Upsert(ctx context.Context, user *Profile) (*Profile, error)
-	GetByID(ctx context.Context, userID string) (*Profile, error)
-	Delete(ctx context.Context, userID string) error
+	Upsert(ctx context.Context, profile *Profile) (*Profile, error)
+	GetByID(ctx context.Context, profileID string) (*Profile, error)
+	Delete(ctx context.Context, profileID string) error
 	GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error)
 	ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error)
 	ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error)

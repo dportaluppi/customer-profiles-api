@@ -18,7 +18,7 @@ type MongoRepository[T Entity] struct {
 }
 
 // NewMongoRepository creates a new instance of MongoRepository.
-func NewMongoRepository[T Entity](client *mongo.Client, db, collection string) *MongoRepository[T] {
+func NewMongoRepository[T Entity](client *mongo.Client, db, collection string) Repository[T] {
 	return &MongoRepository[T]{
 		client:     client,
 		db:         db,

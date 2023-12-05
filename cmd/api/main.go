@@ -6,7 +6,9 @@ import (
 	"github.com/dportaluppi/customer-profiles-api/internal/config"
 	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
 	"github.com/dportaluppi/customer-profiles-api/internal/repository"
+	istore "github.com/dportaluppi/customer-profiles-api/internal/store"
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
+	"github.com/dportaluppi/customer-profiles-api/pkg/store"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -54,16 +56,30 @@ func main() {
 		profile.NewGetter(users),
 	)
 
-	// Routes
+	// Profiles
 	router := gin.Default()
 	router.POST("/profiles", uHandler.Create)
 	router.PUT("/profiles/:id", uHandler.Update)
 	router.DELETE("/profiles/:id", uHandler.Delete)
 	router.GET("/profiles/:id", uHandler.GetByID)
 	router.GET("/profiles", uHandler.GetAll)
-
 	router.POST("/profiles/query", uHandler.Query)
 	router.POST("/profiles/queries/jsonlogic", uHandler.QueryJsonLogic)
+
+	// Stores
+	stores := repository.NewMongoRepository[*store.Store](mongoClient, cfg.Mongo.DB, "stores")
+	sHandler := istore.NewHandler(
+		store.NewSaver(stores),
+		store.NewDeleter(stores),
+		store.NewGetter(stores),
+	)
+	router.POST("/stores", sHandler.Create)
+	router.PUT("/stores/:id", sHandler.Update)
+	router.DELETE("/stores/:id", sHandler.Delete)
+	router.GET("/stores/:id", sHandler.GetByID)
+	router.GET("/stores", sHandler.GetAll)
+	router.POST("/stores/query", sHandler.Query)
+	router.POST("/stores/queries/jsonlogic", sHandler.QueryJsonLogic)
 
 	if err = router.Run(":8030"); err != nil {
 		panic(err)
