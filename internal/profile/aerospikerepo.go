@@ -21,11 +21,11 @@ func NewAerospikeRepository(client *aerospike.Client, namespace string) profile.
 	return &aerospikeRepository{
 		client:    client,
 		namespace: namespace,
-		set:       "profiles",
+		set:       "users",
 	}
 }
 
-func (r *aerospikeRepository) Updater(ctx context.Context, profile *profile.Profile) (*profile.Profile, error) {
+func (r *aerospikeRepository) Upsert(ctx context.Context, profile *profile.Profile) (*profile.Profile, error) {
 	var err error
 	isNew := profile.ID == ""
 	if isNew {
@@ -138,7 +138,10 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*p
 	return profiles, len(profiles), nil
 }
 
-func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*profile.Profile, int, error) {
+func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	panic("implement me")
+}
+func (r *aerospikeRepository) ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*profile.Profile, int, error) {
 	panic("implement me")
 }
 

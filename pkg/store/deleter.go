@@ -1,11 +1,11 @@
-package profile
+package store
 
 import (
 	"context"
 	"github.com/pkg/errors"
 )
 
-// deleter implements the profile deletion service.
+// deleter implements the store deletion service.
 type deleter struct {
 	repo Repository
 }

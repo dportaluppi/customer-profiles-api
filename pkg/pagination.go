@@ -1,4 +1,4 @@
-package profile
+package pkg
 
 type Pagination struct {
 	CurrentPage int `json:"currentPage"`

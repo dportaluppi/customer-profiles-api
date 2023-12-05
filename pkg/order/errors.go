@@ -1,4 +1,4 @@
-package profile
+package order
 
 import "github.com/dportaluppi/customer-profiles-api/pkg"
 
