@@ -2,6 +2,7 @@ package profile
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 )
 
@@ -41,4 +42,8 @@ func (s *getter) GetAll(ctx context.Context, page, limit int) ([]*Profile, int, 
 func (s *getter) Query(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error) {
 	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
 	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
+}
+
+func (s *getter) GetKeys(ctx context.Context) (map[string][]any, error) {
+	return s.repo.GetKeys(ctx)
 }

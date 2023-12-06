@@ -3,12 +3,14 @@ package profile
 import (
 	"context"
 	"fmt"
-	"github.com/aerospike/aerospike-client-go/v6"
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"strings"
 	"time"
+
+	"github.com/aerospike/aerospike-client-go/v6"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
 type aerospikeRepository struct {
@@ -139,6 +141,11 @@ func (r *aerospikeRepository) GetAll(ctx context.Context, page, limit int) ([]*p
 }
 
 func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*profile.Profile, int, error) {
+	panic("implement me")
+}
+
+func (r *aerospikeRepository) GetKeys(ctx context.Context) (map[string][]any, error) {
+	//TODO implement me
 	panic("implement me")
 }
 

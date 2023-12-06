@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/aerospike/aerospike-client-go/v6"
-	"github.com/dportaluppi/customer-profiles-api/internal/config"
-	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
+
+	"github.com/dportaluppi/customer-profiles-api/internal/config"
+	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
 func main() {
@@ -22,11 +23,13 @@ func main() {
 	}
 
 	// Aerospike client
-	client, err := aerospike.NewClient(cfg.Aerospike.Address, cfg.Aerospike.Port)
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+	/*
+		client, err := aerospike.NewClient(cfg.Aerospike.Address, cfg.Aerospike.Port)
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+	*/
 
 	// Set up MongoDB client
 	clientOptions := options.Client().
@@ -43,12 +46,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Attributes
+	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
+
 	// Profile
-	repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
-	repo = iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
+	//repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
+	repo := iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
 	profileHandler := iprofile.NewHandler(
-		profile.NewUpserter(repo),
-		profile.NewDeleter(repo),
+		profile.NewUpserter(repo, attr),
+		profile.NewDeleter(repo, attr),
 		profile.NewGetter(repo),
 	)
 
@@ -59,6 +65,7 @@ func main() {
 	router.DELETE("/profiles/:id", profileHandler.Delete)
 	router.GET("/profiles/:id", profileHandler.GetByID)
 	router.GET("/profiles", profileHandler.GetAll)
+	router.GET("/profiles/keys", profileHandler.GetKeys)
 
 	router.POST("/profiles/query", profileHandler.Query)
 

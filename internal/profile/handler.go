@@ -1,12 +1,14 @@
 package profile
 
 import (
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
 // service define business logic for profile.
@@ -184,4 +186,17 @@ func (h *Handler) Query(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) GetKeys(c *gin.Context) {
+	ctx := c.Request.Context()
+	keys, err := h.service.GetKeys(ctx)
+	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, keys)
 }

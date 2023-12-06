@@ -2,16 +2,21 @@ package profile
 
 import (
 	"context"
+
 	errstack "github.com/pkg/errors"
 )
 
 // upserter implements the profile upserter service.
 type upserter struct {
 	repo Repository
+	attr AttributesRepository
 }
 
-func NewUpserter(repo Repository) *upserter {
-	return &upserter{repo: repo}
+func NewUpserter(repo Repository, attr AttributesRepository) *upserter {
+	return &upserter{
+		repo: repo,
+		attr: attr,
+	}
 }
 
 func (s *upserter) Create(ctx context.Context, profile *Profile) (*Profile, error) {
@@ -24,6 +29,12 @@ func (s *upserter) Create(ctx context.Context, profile *Profile) (*Profile, erro
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	_, err = s.attr.Updater(ctx, p)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return p, nil
 }
 
@@ -45,5 +56,11 @@ func (s *upserter) Update(ctx context.Context, id string, profile *Profile) (*Pr
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	_, err = s.attr.Updater(ctx, p)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return p, nil
 }

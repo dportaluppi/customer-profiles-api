@@ -42,3 +42,6 @@ dist
 
 # Log files
 /.log/
+
+# generated files
+./cmd/batch/*.json

@@ -2,11 +2,14 @@ package profile
 
 import (
 	"context"
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
+
+	"github.com/yalochat/go-commerce-components/flat"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
 type mongoRepository struct {
@@ -22,6 +25,7 @@ func NewMongoRepository(client *mongo.Client, db string) profile.Repository {
 		collection: "profiles",
 	}
 }
+
 func (r *mongoRepository) Updater(ctx context.Context, profile *profile.Profile) (*profile.Profile, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
@@ -143,4 +147,45 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 	}
 
 	return results, int(totalItems), nil
+}
+
+func (r *mongoRepository) GetKeys(ctx context.Context) (map[string][]any, error) {
+	f := flat.NewFlattener()
+	coll := r.client.Database(r.db).Collection(r.collection)
+
+	cursor, err := coll.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	result := make(map[string][]any)
+	unique := make(map[string]map[any]struct{})
+
+	for cursor.Next(ctx) {
+		var p map[string]any
+		if err := cursor.Decode(&p); err != nil {
+			return nil, err
+		}
+
+		fp := f.Flatten(p)
+
+		for key, value := range fp {
+			if key == "_id" {
+				continue
+			}
+
+			if _, ok := unique[key]; !ok {
+				result[key] = []any{}
+				unique[key] = make(map[interface{}]struct{})
+			}
+
+			if _, ok := unique[key][value]; !ok {
+				result[key] = append(result[key], value)
+				unique[key][value] = struct{}{}
+			}
+		}
+	}
+
+	return result, nil
 }
