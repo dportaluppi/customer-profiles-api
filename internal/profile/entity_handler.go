@@ -13,7 +13,7 @@ import (
 
 // service define business logic for entity.
 type service struct {
-	profile.Upserter
+	profile.Saver
 	profile.Deleter
 	profile.Getter
 }
@@ -24,11 +24,11 @@ type Handler struct {
 }
 
 // NewHandler creates a new handler for entity.
-func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profile.Getter) *Handler {
+func NewHandler(upserter profile.Saver, deleter profile.Deleter, getter profile.Getter) *Handler {
 	s := &service{
-		Upserter: upserter,
-		Deleter:  deleter,
-		Getter:   getter,
+		Saver:   upserter,
+		Deleter: deleter,
+		Getter:  getter,
 	}
 	return &Handler{service: s}
 }
@@ -221,4 +221,44 @@ func (h *Handler) QueryJsonLogic(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) CreateRelationship(context *gin.Context) {
+	var relationship profile.Relationship
+	if err := context.ShouldBindJSON(&relationship); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	accountId := context.Param("accountId")
+	entityId := context.Param("id")
+
+	ctx := context.Request.Context()
+	entityWithRelationships, err := h.service.AddRelationship(ctx, accountId, entityId, relationship)
+	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, entityWithRelationships)
+}
+
+func (h *Handler) ReplaceRelationships(context *gin.Context) {
+	var newRelationships []profile.Relationship
+	if err := context.BindJSON(&newRelationships); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	accountId := context.Param("accountId")
+	entityId := context.Param("id")
+
+	ctx := context.Request.Context()
+	entityWithRelationships, err := h.service.ReplaceRelationships(ctx, accountId, entityId, newRelationships)
+	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, entityWithRelationships)
 }

@@ -62,6 +62,9 @@ func main() {
 	router.POST("/accounts/:accountId/entities/search", eHandler.Query)
 	router.POST("/accounts/:accountId/entities/queries/jsonlogic", eHandler.QueryJsonLogic) // TODO: Remove this endpoint
 
+	// Relationships
+	router.POST("/accounts/:accountId/entities/:id/relationships", eHandler.CreateRelationship)
+	router.PUT("/accounts/:accountId/entities/:id/relationships", eHandler.ReplaceRelationships)
 	if err = router.Run(":8030"); err != nil {
 		panic(err)
 	}

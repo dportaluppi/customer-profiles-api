@@ -60,9 +60,23 @@ func (e *Entity) SetUpdatedAt(t time.Time) {
 	e.UpdatedAt = &t
 }
 
-type Upserter interface {
+func (e *Entity) Add(r Relationship) bool {
+	// Check if relationship already exists
+	for _, existingRelationship := range e.Relationships {
+		if existingRelationship.Type == r.Type && existingRelationship.TargetID == r.TargetID {
+			return false
+		}
+	}
+
+	e.Relationships = append(e.Relationships, r)
+	return true
+}
+
+type Saver interface {
 	Create(ctx context.Context, accountId string, entity *Entity) (*Entity, error)
 	Update(ctx context.Context, accountId, id string, entity *Entity) (*Entity, error)
+	AddRelationship(ctx context.Context, accountId, id string, relationship Relationship) (*Entity, error)
+	ReplaceRelationships(ctx context.Context, accountId, id string, relationship []Relationship) (*Entity, error)
 }
 
 type Deleter interface {

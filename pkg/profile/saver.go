@@ -59,3 +59,35 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 	}
 	return p, nil
 }
+
+func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relationship Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountId, id)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
+	if !e.Add(relationship) {
+		return e, nil
+	}
+
+	e, err = s.repo.Upsert(ctx, accountId, e)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+	return e, nil
+}
+
+func (s *saver) ReplaceRelationships(ctx context.Context, accountId, id string, relationships []Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountId, id)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
+	e.Relationships = relationships
+
+	e, err = s.repo.Upsert(ctx, accountId, e)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+	return e, nil
+}
