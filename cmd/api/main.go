@@ -53,15 +53,14 @@ func main() {
 		profile.NewDeleter(entities),
 		profile.NewGetter(entities),
 	)
-	router.POST("/entities", eHandler.Create)
-	router.PUT("/entities/:id", eHandler.Update)
-	router.DELETE("/entities/:id", eHandler.Delete)
-	router.GET("/entities/:id", eHandler.GetByID)
-	router.GET("/entities", eHandler.GetAll)
+	router.POST("/accounts/:accountId/entities", eHandler.Create)
+	router.PUT("/accounts/:accountId/entities/:id", eHandler.Update)
+	router.DELETE("/accounts/:accountId/entities/:id", eHandler.Delete)
+	router.GET("/accounts/:accountId/entities/:id", eHandler.GetByID)
+	router.GET("/accounts/:accountId/entities", eHandler.GetAll)
 
-	// Search http://localhost:8080/v1/account/{account_id}/entities/search
-	router.POST("/entities/search", eHandler.Query)
-	router.POST("/entities/queries/jsonlogic", eHandler.QueryJsonLogic)
+	router.POST("/accounts/:accountId/entities/search", eHandler.Query)
+	router.POST("/accounts/:accountId/entities/queries/jsonlogic", eHandler.QueryJsonLogic) // TODO: Remove this endpoint
 
 	if err = router.Run(":8030"); err != nil {
 		panic(err)

@@ -35,14 +35,15 @@ func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profi
 
 // Create manages the creation of a new entity.
 func (h *Handler) Create(c *gin.Context) {
-	var p profile.Entity
-	if err := c.ShouldBindJSON(&p); err != nil {
+	var e profile.Entity
+	if err := c.ShouldBindJSON(&e); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	accountId := c.Param("accountId")
 
 	ctx := c.Request.Context()
-	createdUser, err := h.service.Create(ctx, &p)
+	createdUser, err := h.service.Create(ctx, accountId, &e)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -61,7 +62,7 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	accountId := c.Param("accountId")
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required for update"})
@@ -69,7 +70,7 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	updatedEntity, err := h.service.Update(ctx, id, &entity)
+	updatedEntity, err := h.service.Update(ctx, accountId, id, &entity)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -90,7 +91,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err := h.service.Delete(ctx, id)
+	err := h.service.Delete(ctx, c.Param("accountId"), id)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -111,7 +112,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	entity, err := h.service.GetByID(ctx, id)
+	entity, err := h.service.GetByID(ctx, c.Param("accountId"), id)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -136,7 +137,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	entities, totalItems, err := h.service.GetAll(ctx, currentPage, perPage)
+	entities, totalItems, err := h.service.GetAll(ctx, c.Param("accountId"), currentPage, perPage)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -172,7 +173,7 @@ func (h *Handler) Query(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	results, totalItems, err := h.service.Query(ctx, query, currentPage, perPage)
+	results, totalItems, err := h.service.Query(ctx, c.Param("accountId"), query, currentPage, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -206,7 +207,7 @@ func (h *Handler) QueryJsonLogic(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	results, totalItems, err := h.service.Pipeline(ctx, mongoQuery.Map(), currentPage, perPage)
+	results, totalItems, err := h.service.Pipeline(ctx, c.Param("accountId"), mongoQuery.Map(), currentPage, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

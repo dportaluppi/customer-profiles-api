@@ -61,26 +61,26 @@ func (e *Entity) SetUpdatedAt(t time.Time) {
 }
 
 type Upserter interface {
-	Create(ctx context.Context, Entity *Entity) (*Entity, error)
-	Update(ctx context.Context, id string, Entity *Entity) (*Entity, error)
+	Create(ctx context.Context, accountId string, entity *Entity) (*Entity, error)
+	Update(ctx context.Context, accountId, id string, entity *Entity) (*Entity, error)
 }
 
 type Deleter interface {
-	Delete(ctx context.Context, EntityID string) error
+	Delete(ctx context.Context, accountId, id string) error
 }
 
 type Getter interface {
-	GetByID(ctx context.Context, EntityID string) (*Entity, error)
-	GetAll(ctx context.Context, page, limit int) ([]*Entity, int, error)
-	Query(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*Entity, int, error)
-	Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error)
+	GetByID(ctx context.Context, accountId, id string) (*Entity, error)
+	GetAll(ctx context.Context, accountId string, page, limit int) ([]*Entity, int, error)
+	Query(ctx context.Context, accountId string, query map[string]any, currentPage, perPage int) ([]*Entity, int, error)
+	Pipeline(ctx context.Context, accountId string, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error)
 }
 
 type Repository interface {
-	Upsert(ctx context.Context, Entity *Entity) (*Entity, error)
-	GetByID(ctx context.Context, EntityID string) (*Entity, error)
-	Delete(ctx context.Context, EntityID string) error
-	GetAll(ctx context.Context, page, limit int) ([]*Entity, int, error)
-	ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Entity, int, error)
-	ExecutePipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error)
+	Upsert(ctx context.Context, entity *Entity) (*Entity, error)
+	GetByID(ctx context.Context, id string) (*Entity, error)
+	Delete(ctx context.Context, id string) error
+	GetAll(ctx context.Context, accountId string, page, limit int) ([]*Entity, int, error)
+	ExecuteQuery(ctx context.Context, accountId string, query map[string]interface{}, page, limit int) ([]*Entity, int, error)
+	ExecutePipeline(ctx context.Context, accountId string, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error)
 }

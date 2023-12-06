@@ -21,7 +21,7 @@ type Repository[T any] interface {
 	Upsert(ctx context.Context, entity T) (T, error)
 	GetByID(ctx context.Context, id string) (T, error)
 	Delete(ctx context.Context, id string) error
-	GetAll(ctx context.Context, page, limit int) ([]T, int, error)
-	ExecuteQuery(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]T, int, error)
-	ExecutePipeline(ctx context.Context, pipeline map[string]interface{}, currentPage, perPage int) ([]T, int, error)
+	GetAll(ctx context.Context, accountId string, page, limit int) ([]T, int, error)
+	ExecuteQuery(ctx context.Context, accountId string, query map[string]interface{}, currentPage, perPage int) ([]T, int, error)
+	ExecutePipeline(ctx context.Context, accountId string, pipeline map[string]interface{}, currentPage, perPage int) ([]T, int, error)
 }

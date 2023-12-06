@@ -92,12 +92,13 @@ func (r *MongoRepository[T]) Delete(ctx context.Context, id string) error {
 }
 
 // GetAll retrieves all entities, with pagination.
-func (r *MongoRepository[T]) GetAll(ctx context.Context, page, limit int) ([]T, int, error) {
+func (r *MongoRepository[T]) GetAll(ctx context.Context, accountId string, page, limit int) ([]T, int, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	findOptions := options.Find().SetSkip(int64((page - 1) * limit)).SetLimit(int64(limit))
 
-	cursor, err := coll.Find(ctx, bson.M{}, findOptions)
+	filter := bson.M{"accountId": accountId}
+	cursor, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -124,6 +125,7 @@ func (r *MongoRepository[T]) GetAll(ctx context.Context, page, limit int) ([]T, 
 // ExecuteQuery executes a query and returns a slice of entities with pagination.
 func (r *MongoRepository[T]) ExecuteQuery(
 	ctx context.Context,
+	accountId string,
 	query map[string]any,
 	currentPage,
 	perPage int,
@@ -132,6 +134,8 @@ func (r *MongoRepository[T]) ExecuteQuery(
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	mongoQuery := bson.M(query)
+	mongoQuery["accountId"] = accountId
+
 	findOptions := options.Find().
 		SetSkip(int64((currentPage - 1) * perPage)).
 		SetLimit(int64(perPage))
@@ -163,6 +167,7 @@ func (r *MongoRepository[T]) ExecuteQuery(
 // ExecutePipeline executes an aggregation pipeline and returns a slice of entities with pagination.
 func (r *MongoRepository[T]) ExecutePipeline(
 	ctx context.Context,
+	accountId string,
 	pipeline map[string]any,
 	currentPage,
 	perPage int,
@@ -170,6 +175,7 @@ func (r *MongoRepository[T]) ExecutePipeline(
 
 	coll := r.client.Database(r.db).Collection(r.collection)
 
+	pipeline["accountId"] = accountId
 	matchStage := bson.D{{"$match", bson.D{{"$expr", pipeline}}}}
 
 	countPipeline := mongo.Pipeline{
