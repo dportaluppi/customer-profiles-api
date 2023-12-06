@@ -77,9 +77,9 @@ type Getter interface {
 }
 
 type Repository interface {
-	Upsert(ctx context.Context, entity *Entity) (*Entity, error)
-	GetByID(ctx context.Context, id string) (*Entity, error)
-	Delete(ctx context.Context, id string) error
+	Upsert(ctx context.Context, accountId string, entity *Entity) (*Entity, error)
+	GetByID(ctx context.Context, accountId, id string) (*Entity, error)
+	Delete(ctx context.Context, accountId, id string) error
 	GetAll(ctx context.Context, accountId string, page, limit int) ([]*Entity, int, error)
 	ExecuteQuery(ctx context.Context, accountId string, query map[string]interface{}, page, limit int) ([]*Entity, int, error)
 	ExecutePipeline(ctx context.Context, accountId string, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error)

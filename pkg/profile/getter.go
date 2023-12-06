@@ -14,20 +14,20 @@ func NewGetter(repo Repository) Getter {
 	return &getter{repo: repo}
 }
 
-func (s *getter) GetByID(ctx context.Context, accountId, id string) (*Entity, error) {
+func (s *getter) GetByID(ctx context.Context, accountID, id string) (*Entity, error) {
 	if id == "" {
 		return nil, ErrIDMissing
 	}
-	if accountId == "" {
+	if accountID == "" {
 		return nil, ErrAccountIDMissing
 	}
 
-	p, err := s.repo.GetByID(ctx, id)
+	p, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if p.AccountID != accountId {
+	if p.AccountID != accountID {
 		return nil, ErrInvalid
 	}
 

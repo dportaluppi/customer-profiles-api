@@ -14,20 +14,20 @@ func NewDeleter(repo Repository) *deleter {
 	return &deleter{repo: repo}
 }
 
-func (s *deleter) Delete(ctx context.Context, accountId, id string) error {
+func (s *deleter) Delete(ctx context.Context, accountID, id string) error {
 	if id == "" {
 		return ErrIDMissing
 	}
-	e, err := s.repo.GetByID(ctx, id)
+	e, err := s.repo.GetByID(ctx, accountID, id)
 	if e == nil {
 		return errors.WithStack(err)
 	}
 
-	if e.AccountID != accountId {
+	if e.AccountID != accountID {
 		return ErrInvalid
 	}
 
-	err = s.repo.Delete(ctx, id)
+	err = s.repo.Delete(ctx, accountID, id)
 	if err != nil {
 		return errors.WithStack(err)
 	}

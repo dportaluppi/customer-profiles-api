@@ -14,37 +14,37 @@ func NewSaver(repo Repository) *saver {
 	return &saver{repo: repo}
 }
 
-func (s *saver) Create(ctx context.Context, accountId string, entity *Entity) (*Entity, error) {
+func (s *saver) Create(ctx context.Context, accountID string, entity *Entity) (*Entity, error) {
 	// TODO: business logic to create a entities
-	if accountId == "" {
+	if accountID == "" {
 		return nil, ErrAccountIDMissing
 	}
 	if entity == nil {
 		return nil, ErrInvalid
 	}
-	entity.AccountID = accountId
-	p, err := s.repo.Upsert(ctx, entity)
+	entity.AccountID = accountID
+	p, err := s.repo.Upsert(ctx, accountID, entity)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 	return p, nil
 }
 
-func (s *saver) Update(ctx context.Context, accountId, id string, entity *Entity) (*Entity, error) {
+func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity) (*Entity, error) {
 	// TODO: business logic to create a entity
-	if accountId == "" {
+	if accountID == "" {
 		return nil, ErrAccountIDMissing
 	}
 	if id == "" {
 		return nil, ErrIDMissing
 	}
 
-	oldEntity, err := s.repo.GetByID(ctx, id)
+	oldEntity, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	if oldEntity.AccountID != accountId {
+	if oldEntity.AccountID != accountID {
 		return nil, ErrInvalid
 	}
 
@@ -53,7 +53,7 @@ func (s *saver) Update(ctx context.Context, accountId, id string, entity *Entity
 	entity.CreatedAt = oldEntity.CreatedAt
 	entity.UpdatedAt = oldEntity.UpdatedAt
 
-	p, err := s.repo.Upsert(ctx, entity)
+	p, err := s.repo.Upsert(ctx, accountID, entity)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
