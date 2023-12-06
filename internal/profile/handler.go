@@ -11,19 +11,19 @@ import (
 	"strconv"
 )
 
-// service define business logic for profile.
+// service define business logic for entity.
 type service struct {
 	profile.Upserter
 	profile.Deleter
 	profile.Getter
 }
 
-// Handler rest api for profile.
+// Handler rest api for entity.
 type Handler struct {
 	service *service
 }
 
-// NewHandler creates a new handler for profile.
+// NewHandler creates a new handler for entity.
 func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profile.Getter) *Handler {
 	s := &service{
 		Upserter: upserter,
@@ -33,9 +33,9 @@ func NewHandler(upserter profile.Upserter, deleter profile.Deleter, getter profi
 	return &Handler{service: s}
 }
 
-// Create manages the creation of a new profile.
+// Create manages the creation of a new entity.
 func (h *Handler) Create(c *gin.Context) {
-	var p profile.Profile
+	var p profile.Entity
 	if err := c.ShouldBindJSON(&p); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -54,10 +54,10 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, createdUser)
 }
 
-// Update manages the update of an existing profile.
+// Update manages the update of an existing entity.
 func (h *Handler) Update(c *gin.Context) {
-	var profile profile.Profile
-	if err := c.ShouldBindJSON(&profile); err != nil {
+	var entity profile.Entity
+	if err := c.ShouldBindJSON(&entity); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -69,7 +69,7 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	updatedProfile, err := h.service.Update(ctx, id, &profile)
+	updatedEntity, err := h.service.Update(ctx, id, &entity)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -78,10 +78,10 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, updatedProfile)
+	c.JSON(http.StatusOK, updatedEntity)
 }
 
-// Delete manages the deletion of a profile.
+// Delete manages the deletion of a entity.
 func (h *Handler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -99,10 +99,10 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Profile deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Entity deleted"})
 }
 
-// GetByID manages fetching a profile by its ID.
+// GetByID manages fetching a entity by its ID.
 func (h *Handler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -111,7 +111,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	profile, err := h.service.GetByID(ctx, id)
+	entity, err := h.service.GetByID(ctx, id)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -120,10 +120,10 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusOK, entity)
 }
 
-// GetAll manages fetching all profiles with pagination.
+// GetAll manages fetching all entities with pagination.
 func (h *Handler) GetAll(c *gin.Context) {
 	currentPage, _ := strconv.Atoi(c.DefaultQuery("currentPage", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
@@ -136,7 +136,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	profiles, totalItems, err := h.service.GetAll(ctx, currentPage, perPage)
+	entities, totalItems, err := h.service.GetAll(ctx, currentPage, perPage)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -147,7 +147,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	pagination := pkg.NewPagination(currentPage, perPage, totalItems)
 
 	response := gin.H{
-		"profiles":   profiles,
+		"entities":   entities,
 		"pagination": pagination,
 	}
 

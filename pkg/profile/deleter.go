@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// deleter implements the profile deletion service.
+// deleter implements the entity deletion service.
 type deleter struct {
 	repo Repository
 }

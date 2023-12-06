@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// getter implements the profile retrieval service.
+// getter implements the entity retrieval service.
 type getter struct {
 	repo Repository
 }
@@ -14,7 +14,7 @@ func NewGetter(repo Repository) Getter {
 	return &getter{repo: repo}
 }
 
-func (s *getter) GetByID(ctx context.Context, id string) (*Profile, error) {
+func (s *getter) GetByID(ctx context.Context, id string) (*Entity, error) {
 	if id == "" {
 		return nil, ErrIDMissing
 	}
@@ -26,24 +26,24 @@ func (s *getter) GetByID(ctx context.Context, id string) (*Profile, error) {
 	return p, nil
 }
 
-func (s *getter) GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error) {
+func (s *getter) GetAll(ctx context.Context, page, limit int) ([]*Entity, int, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, ErrInvalidPaginationParameters
 	}
 
-	profiles, count, err := s.repo.GetAll(ctx, page, limit)
+	entities, count, err := s.repo.GetAll(ctx, page, limit)
 	if err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
-	return profiles, count, nil
+	return entities, count, nil
 }
 
-func (s *getter) Query(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*Profile, int, error) {
-	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
+func (s *getter) Query(ctx context.Context, query map[string]any, currentPage, perPage int) ([]*Entity, int, error) {
+	// TODO: business logic to query entities, e.g. check semantic and syntactic validity of query
 	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
 }
 
-func (s *getter) Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Profile, int, error) {
-	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
+func (s *getter) Pipeline(ctx context.Context, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error) {
+	// TODO: business logic to query entities, e.g. check semantic and syntactic validity of query
 	return s.repo.ExecutePipeline(ctx, pipeline, currentPage, perPage)
 }
