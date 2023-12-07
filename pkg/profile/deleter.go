@@ -33,7 +33,7 @@ func (s *deleter) Delete(ctx context.Context, id string) error {
 		return errors.WithStack(err)
 	}
 
-	if _, err = s.attr.Delete(ctx, p); err != nil {
+	if err = s.attr.Delete(ctx, p); err != nil {
 		return errors.WithStack(err)
 	}
 

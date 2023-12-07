@@ -144,7 +144,7 @@ func (r *aerospikeRepository) ExecuteQuery(ctx context.Context, query map[string
 	panic("implement me")
 }
 
-func (r *aerospikeRepository) GetKeys(ctx context.Context) (map[string][]any, error) {
+func (r *aerospikeRepository) GetKeys(ctx context.Context) (profile.Attributes, error) {
 	//TODO implement me
 	panic("implement me")
 }

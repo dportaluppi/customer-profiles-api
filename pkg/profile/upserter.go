@@ -30,7 +30,7 @@ func (s *upserter) Create(ctx context.Context, profile *Profile) (*Profile, erro
 		return nil, errstack.WithStack(err)
 	}
 
-	_, err = s.attr.Updater(ctx, p)
+	err = s.attr.Updater(ctx, p)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -52,12 +52,17 @@ func (s *upserter) Update(ctx context.Context, id string, profile *Profile) (*Pr
 	profile.CreatedAt = oldProfile.CreatedAt
 	profile.UpdatedAt = oldProfile.UpdatedAt
 
+	err = s.attr.Delete(ctx, oldProfile)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	p, err := s.repo.Updater(ctx, profile)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	_, err = s.attr.Updater(ctx, p)
+	err = s.attr.Updater(ctx, p)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}

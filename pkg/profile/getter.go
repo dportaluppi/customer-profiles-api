@@ -9,10 +9,14 @@ import (
 // getter implements the profile retrieval service.
 type getter struct {
 	repo Repository
+	attr AttributesRepository
 }
 
-func NewGetter(repo Repository) Getter {
-	return &getter{repo: repo}
+func NewGetter(repo Repository, attr AttributesRepository) Getter {
+	return &getter{
+		repo: repo,
+		attr: attr,
+	}
 }
 
 func (s *getter) GetByID(ctx context.Context, id string) (*Profile, error) {
@@ -44,6 +48,6 @@ func (s *getter) Query(ctx context.Context, query map[string]interface{}, curren
 	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
 }
 
-func (s *getter) GetKeys(ctx context.Context) (map[string][]any, error) {
-	return s.repo.GetKeys(ctx)
+func (s *getter) GetKeys(ctx context.Context) (Attributes, error) {
+	return s.attr.GetAll(ctx)
 }

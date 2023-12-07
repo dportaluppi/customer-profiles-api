@@ -4,8 +4,17 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/pkg/errors"
+	"github.com/yalochat/go-commerce-components/logging"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+)
+
+var (
+	ErrAttributeUnreachable = errors.New("attribute name unreachable")
+	ErrValuesUnreachable    = errors.New("attribute values unreachable")
+	ErrValueConvert         = errors.New("cannot convert attribute value into string")
 )
 
 type Flattener interface {
@@ -19,16 +28,41 @@ type MongoRepository struct {
 	flattener  Flattener
 }
 
-func NewMongoRepository(client *mongo.Client, db string, f Flattener) *MongoRepository {
-	return &MongoRepository{
+func NewMongoRepository(ctx context.Context, client *mongo.Client, db string, f Flattener) *MongoRepository {
+	r := &MongoRepository{
 		client:     client,
 		db:         db,
 		collection: "attributes",
 		flattener:  f,
 	}
+
+	if err := createIndexes(ctx, r); err != nil {
+		logging.FromContext(ctx).Fatalf("could not create the mongodb index. %s", err)
+	}
+
+	return r
 }
 
-func (r *MongoRepository) GetAll(ctx context.Context) ([]Attribute, error) {
+func createIndexes(ctx context.Context, r *MongoRepository) error {
+	account := mongo.IndexModel{
+		Keys: bson.M{"attribute": 1},
+	}
+
+	combinedQuery := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "attribute", Value: 1},
+			{Key: "value", Value: 1},
+		},
+	}
+
+	var indexes []mongo.IndexModel
+	indexes = append(indexes, account, combinedQuery)
+
+	_, err := r.client.Database(r.db).Collection(r.collection).Indexes().CreateMany(ctx, indexes)
+	return err
+}
+
+func (r *MongoRepository) GetAll(ctx context.Context) (Attributes, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	pipeline := bson.A{
@@ -53,23 +87,42 @@ func (r *MongoRepository) GetAll(ctx context.Context) ([]Attribute, error) {
 		return nil, err
 	}
 
-	return attributes, nil
+	result := make(Attributes)
+
+	for _, res := range results {
+		attr, ok := res["_id"].(string)
+		if !ok {
+			return nil, ErrAttributeUnreachable
+		}
+
+		values, ok := res["values"].(primitive.A)
+		if !ok {
+			return nil, ErrValuesUnreachable
+		}
+
+		var stringValues []string
+		for _, v := range values {
+			s, ok := v.(string)
+			if !ok {
+				return nil, ErrValueConvert
+			}
+
+			stringValues = append(stringValues, s)
+		}
+
+		result[attr] = stringValues
+	}
+
+	return result, nil
 }
 
 func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	b, err := json.Marshal(profile)
+	fp, err := r.flatProfile(profile)
 	if err != nil {
 		return err
 	}
-
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-
-	fp := r.flattener.Flatten(m)
 
 	var updates []mongo.WriteModel
 
@@ -106,17 +159,10 @@ func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) error {
 func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	b, err := json.Marshal(profile)
+	fp, err := r.flatProfile(profile)
 	if err != nil {
 		return err
 	}
-
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-
-	fp := r.flattener.Flatten(m)
 
 	var updates []mongo.WriteModel
 
@@ -148,4 +194,24 @@ func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) error {
 	}
 
 	return nil
+}
+
+func (r *MongoRepository) flatProfile(profile *Profile) (map[string]any, error) {
+	b, err := json.Marshal(profile)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+
+	delete(m, "profileId")
+	delete(m, "createdAt")
+	delete(m, "updatedAt")
+
+	fp := r.flattener.Flatten(m)
+
+	return fp, nil
 }

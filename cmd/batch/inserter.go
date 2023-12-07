@@ -97,7 +97,7 @@ func upserter(ctx context.Context) profile.Upserter {
 	f := flat.NewFlattener()
 
 	// Attributes
-	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB, f)
+	attr := profile.NewMongoRepository(ctx, mongoClient, cfg.Mongo.DB, f)
 
 	return profile.NewUpserter(repo, attr)
 }

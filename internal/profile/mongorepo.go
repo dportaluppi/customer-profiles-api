@@ -2,6 +2,7 @@ package profile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/yalochat/go-commerce-components/flat"
 	"go.mongodb.org/mongo-driver/bson"
@@ -149,7 +150,7 @@ func (r *mongoRepository) ExecuteQuery(ctx context.Context, query map[string]any
 	return results, int(totalItems), nil
 }
 
-func (r *mongoRepository) GetKeys(ctx context.Context) (map[string][]any, error) {
+func (r *mongoRepository) GetKeys(ctx context.Context) (profile.Attributes, error) {
 	f := flat.NewFlattener()
 	coll := r.client.Database(r.db).Collection(r.collection)
 
@@ -159,7 +160,7 @@ func (r *mongoRepository) GetKeys(ctx context.Context) (map[string][]any, error)
 	}
 	defer cursor.Close(ctx)
 
-	result := make(map[string][]any)
+	result := make(profile.Attributes)
 	unique := make(map[string]map[any]struct{})
 
 	for cursor.Next(ctx) {
@@ -171,17 +172,17 @@ func (r *mongoRepository) GetKeys(ctx context.Context) (map[string][]any, error)
 		fp := f.Flatten(p)
 
 		for key, value := range fp {
-			if key == "_id" {
+			if key == "_id" || key == "createdAt" || key == "updatedAt" {
 				continue
 			}
 
 			if _, ok := unique[key]; !ok {
-				result[key] = []any{}
+				result[key] = []string{}
 				unique[key] = make(map[interface{}]struct{})
 			}
 
 			if _, ok := unique[key][value]; !ok {
-				result[key] = append(result[key], value)
+				result[key] = append(result[key], fmt.Sprint(value))
 				unique[key][value] = struct{}{}
 			}
 		}

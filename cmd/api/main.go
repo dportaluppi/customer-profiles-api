@@ -51,7 +51,7 @@ func main() {
 	f := flat.NewFlattener()
 
 	// Attributes
-	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB, f)
+	attr := profile.NewMongoRepository(ctx, mongoClient, cfg.Mongo.DB, f)
 
 	// Profile
 	//repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
@@ -59,7 +59,7 @@ func main() {
 	profileHandler := iprofile.NewHandler(
 		profile.NewUpserter(repo, attr),
 		profile.NewDeleter(repo, attr),
-		profile.NewGetter(repo),
+		profile.NewGetter(repo, attr),
 	)
 
 	// Routes
