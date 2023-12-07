@@ -3,151 +3,149 @@ package profile
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
-	"github.com/mitchellh/mapstructure"
-	"github.com/yalochat/go-commerce-components/flat"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type Flattener interface {
+	Flatten(in map[string]any) map[string]any
+}
 
 type MongoRepository struct {
 	client     *mongo.Client
 	db         string
 	collection string
+	flattener  Flattener
 }
 
-func NewMongoRepository(client *mongo.Client, db string) *MongoRepository {
+func NewMongoRepository(client *mongo.Client, db string, f Flattener) *MongoRepository {
 	return &MongoRepository{
 		client:     client,
 		db:         db,
 		collection: "attributes",
+		flattener:  f,
 	}
 }
 
-func (r *MongoRepository) Get(ctx context.Context) (Attribute, error) {
+func (r *MongoRepository) GetAll(ctx context.Context) ([]Attribute, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	cursor, err := coll.Find(ctx, bson.M{})
+	pipeline := bson.A{
+		bson.D{
+			{"$group", bson.D{
+				{"_id", "$attribute"},
+				{"values", bson.D{
+					{"$push", "$value"},
+				}},
+			}},
+		},
+	}
+
+	cursor, err := coll.Aggregate(ctx, pipeline)
 	if err != nil {
-		return Attribute{}, err
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var attributes []Attribute
-	for cursor.Next(ctx) {
-		var attribute Attribute
-		if err := cursor.Decode(&attribute); err != nil {
-			return Attribute{}, err
-		}
-		attributes = append(attributes, attribute)
+	var results []bson.M
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
 	}
 
-	if len(attributes) == 0 {
-		return Attribute{}, nil
-	}
-
-	return attributes[0], nil
+	return attributes, nil
 }
 
-func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) (Attribute, error) {
-	current, err := r.Get(ctx)
-	if err != nil {
-		return Attribute{}, err
-	}
-
-	f := flat.NewFlattener()
+func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
-
-	opts := options.Update().SetUpsert(true)
 
 	b, err := json.Marshal(profile)
 	if err != nil {
-		return Attribute{}, err
+		return err
 	}
 
 	var m map[string]interface{}
 	if err := json.Unmarshal(b, &m); err != nil {
-		return Attribute{}, err
+		return err
 	}
 
-	fp := f.Flatten(m)
+	fp := r.flattener.Flatten(m)
 
-	if current.Attributes == nil {
-		current.Attributes = make(Attributes)
-	}
+	var updates []mongo.WriteModel
 
 	for k, v := range fp {
-		strValue := fmt.Sprint(v)
-
-		if _, ok := current.Attributes[k]; !ok {
-			current.Attributes[k] = Counter{strValue: 0}
+		filter := bson.D{
+			{"attribute", k},
+			{"value", v},
 		}
 
-		current.Attributes[k][strValue]++
+		update := mongo.NewUpdateOneModel()
+		update.SetFilter(filter)
+		update.SetUpdate(bson.D{
+			{"$set", bson.D{
+				{"attribute", k},
+				{"value", v},
+			}},
+			{"$inc", bson.D{
+				{"count", 1},
+			}},
+		})
+		update.SetUpsert(true)
+
+		updates = append(updates, update)
 	}
 
-	update := bson.M{"$set": current}
-
-	id := current.ID
-	if current.ID.IsZero() {
-		id = primitive.NewObjectID()
-	}
-
-	_, err = coll.UpdateOne(ctx, bson.M{"_id": id}, update, opts)
+	_, err = coll.BulkWrite(ctx, updates)
 	if err != nil {
-		return Attribute{}, err
+		return err
 	}
 
-	return current, nil
+	return nil
 }
 
-func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) (Attribute, error) {
-	current, err := r.Get(ctx)
-	if err != nil {
-		return Attribute{}, err
-	}
-
-	f := flat.NewFlattener()
+func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	opts := options.Update().SetUpsert(true)
+	b, err := json.Marshal(profile)
+	if err != nil {
+		return err
+	}
 
 	var m map[string]interface{}
-	if err := mapstructure.Decode(profile, &m); err != nil {
-		return Attribute{}, err
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
 	}
 
-	fp := f.Flatten(m)
+	fp := r.flattener.Flatten(m)
+
+	var updates []mongo.WriteModel
 
 	for k, v := range fp {
-		attr, ok := current.Attributes[k]
-		if !ok {
-			continue
+		filter := bson.D{
+			{"attribute", k},
+			{"value", v},
 		}
 
-		strValue := fmt.Sprint(v)
+		update := mongo.NewUpdateOneModel()
+		update.SetFilter(filter)
+		update.SetUpdate(bson.D{
+			{"$inc", bson.D{
+				{"count", -1},
+			}},
+		})
 
-		c, ok := attr[strValue]
-		if !ok {
-			continue
-		}
-
-		if c > 1 {
-			current.Attributes[k][strValue]--
-		} else {
-			delete(current.Attributes[k], strValue)
-		}
+		updates = append(updates, update)
 	}
 
-	update := bson.M{"$set": current}
-
-	_, err = coll.UpdateOne(ctx, bson.M{"_id": current.ID}, update, opts)
+	_, err = coll.BulkWrite(ctx, updates)
 	if err != nil {
-		return Attribute{}, err
+		return err
 	}
 
-	return current, nil
+	_, err = coll.DeleteMany(ctx, bson.D{{"count", 0}})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -6,15 +6,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Attributes map[string][]string
+
 type Attribute struct {
-	ID     primitive.ObjectID `bson:"_id,omitempty"`
-	Name   string             `bson:"name"`
-	Domain map[string]int     `bson:"domain"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Name      string             `bson:"name"`
+	Attribute string             `bson:"attribute"`
+	Value     string             `bson:"value"`
+	Count     int                `bson:"count"`
 }
-
-type Attributes map[string]Counter
-
-type Counter map[string]int
 
 type AttributesRepository interface {
 	Get(context.Context) (Attribute, error)

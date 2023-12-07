@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/yalochat/go-commerce-components/flat"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -92,8 +93,11 @@ func upserter(ctx context.Context) profile.Upserter {
 	// Profile
 	repo := iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
 
+	// Flattener
+	f := flat.NewFlattener()
+
 	// Attributes
-	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
+	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB, f)
 
 	return profile.NewUpserter(repo, attr)
 }

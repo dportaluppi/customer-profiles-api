@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yalochat/go-commerce-components/flat"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -46,8 +47,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Flattener
+	f := flat.NewFlattener()
+
 	// Attributes
-	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
+	attr := profile.NewMongoRepository(mongoClient, cfg.Mongo.DB, f)
 
 	// Profile
 	//repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
