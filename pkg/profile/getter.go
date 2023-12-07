@@ -62,5 +62,5 @@ func (s *getter) Pipeline(ctx context.Context, accountId string, pipeline map[st
 }
 
 func (s *getter) GetKeys(ctx context.Context, accountId string) (Attributes, error) {
-	return s.attr.GetAll(ctx)
+	return s.attr.GetAll(ctx, accountId)
 }

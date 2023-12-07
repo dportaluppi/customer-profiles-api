@@ -36,7 +36,7 @@ func (s *saver) Create(ctx context.Context, accountID string, entity *Entity) (*
 		return nil, errstack.WithStack(err)
 	}
 
-	err = s.attr.Updater(ctx, p)
+	err = s.attr.Updater(ctx, accountID, p)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -62,7 +62,7 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 		return nil, ErrInvalid
 	}
 
-	err = s.attr.Delete(ctx, oldEntity)
+	err = s.attr.Delete(ctx, accountID, oldEntity)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -77,7 +77,7 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 		return nil, errstack.WithStack(err)
 	}
 
-	err = s.attr.Updater(ctx, p)
+	err = s.attr.Updater(ctx, accountID, p)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -85,8 +85,8 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 	return p, nil
 }
 
-func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relationship Relationship) (*Entity, error) {
-	e, err := s.repo.GetByID(ctx, accountId, id)
+func (s *saver) AddRelationship(ctx context.Context, accountID, id string, relationship Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -95,17 +95,17 @@ func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relat
 		return e, nil
 	}
 
-	err = s.attr.Delete(ctx, e)
+	err = s.attr.Delete(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	e, err = s.repo.Upsert(ctx, accountId, e)
+	e, err = s.repo.Upsert(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	err = s.attr.Updater(ctx, e)
+	err = s.attr.Updater(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -113,25 +113,25 @@ func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relat
 	return e, nil
 }
 
-func (s *saver) ReplaceRelationships(ctx context.Context, accountId, id string, relationships []Relationship) (*Entity, error) {
-	e, err := s.repo.GetByID(ctx, accountId, id)
+func (s *saver) ReplaceRelationships(ctx context.Context, accountID, id string, relationships []Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	err = s.attr.Delete(ctx, e)
+	err = s.attr.Delete(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
 	e.Relationships = relationships
 
-	e, err = s.repo.Upsert(ctx, accountId, e)
+	e, err = s.repo.Upsert(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
-	err = s.attr.Updater(ctx, e)
+	err = s.attr.Updater(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}

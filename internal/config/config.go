@@ -40,7 +40,7 @@ type Aerospike struct {
 
 type Mongo struct {
 	Uri               string        `required:"true" default:"mongodb://localhost:27017"`
-	Timeout           time.Duration `default:"1s"`
+	Timeout           time.Duration `default:"5s"`
 	ConnectionTimeout time.Duration `split_words:"true" default:"1s"`
 	DB                string        `default:"customers-profiles-api"`
 }

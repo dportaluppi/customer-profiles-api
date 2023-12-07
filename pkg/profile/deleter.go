@@ -36,7 +36,7 @@ func (s *deleter) Delete(ctx context.Context, accountID, id string) error {
 		return errors.WithStack(err)
 	}
 
-	if err = s.attr.Delete(ctx, e); err != nil {
+	if err = s.attr.Delete(ctx, accountID, e); err != nil {
 		return errors.WithStack(err)
 	}
 

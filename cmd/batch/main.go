@@ -9,7 +9,7 @@ const (
 	path          = "./cmd/batch"
 	profileFile   = "profiles.json"
 	words         = "words.txt"
-	numProfiles   = 100000
+	numProfiles   = 10000
 	maxAttributes = 10
 )
 

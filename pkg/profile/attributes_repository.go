@@ -45,27 +45,44 @@ func NewMongoRepository(ctx context.Context, client *mongo.Client, db string, f 
 
 func createIndexes(ctx context.Context, r *MongoRepository) error {
 	account := mongo.IndexModel{
+		Keys: bson.M{"accountId": 1},
+	}
+
+	attribute := mongo.IndexModel{
 		Keys: bson.M{"attribute": 1},
+	}
+
+	combinedAccount := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "attribute", Value: 1},
+			{Key: "accountId", Value: 1},
+		},
 	}
 
 	combinedQuery := mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "attribute", Value: 1},
 			{Key: "value", Value: 1},
+			{Key: "accountId", Value: 1},
 		},
 	}
 
 	var indexes []mongo.IndexModel
-	indexes = append(indexes, account, combinedQuery)
+	indexes = append(indexes, account, attribute, combinedAccount, combinedQuery)
 
 	_, err := r.client.Database(r.db).Collection(r.collection).Indexes().CreateMany(ctx, indexes)
 	return err
 }
 
-func (r *MongoRepository) GetAll(ctx context.Context) (Attributes, error) {
+func (r *MongoRepository) GetAll(ctx context.Context, accountID string) (Attributes, error) {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	pipeline := bson.A{
+		bson.D{
+			{"$match", bson.D{
+				{"accountId", accountID},
+			}},
+		},
 		bson.D{
 			{"$group", bson.D{
 				{"_id", "$attribute"},
@@ -116,7 +133,7 @@ func (r *MongoRepository) GetAll(ctx context.Context) (Attributes, error) {
 	return result, nil
 }
 
-func (r *MongoRepository) Updater(ctx context.Context, entity *Entity) error {
+func (r *MongoRepository) Updater(ctx context.Context, accountID string, entity *Entity) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	fl, err := r.flat(entity)
@@ -130,12 +147,14 @@ func (r *MongoRepository) Updater(ctx context.Context, entity *Entity) error {
 		filter := bson.D{
 			{"attribute", k},
 			{"value", v},
+			{"accountId", accountID},
 		}
 
 		update := mongo.NewUpdateOneModel()
 		update.SetFilter(filter)
 		update.SetUpdate(bson.D{
 			{"$set", bson.D{
+				{"accountId", accountID},
 				{"attribute", k},
 				{"value", v},
 			}},
@@ -156,7 +175,7 @@ func (r *MongoRepository) Updater(ctx context.Context, entity *Entity) error {
 	return nil
 }
 
-func (r *MongoRepository) Delete(ctx context.Context, entity *Entity) error {
+func (r *MongoRepository) Delete(ctx context.Context, accountID string, entity *Entity) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
 	fl, err := r.flat(entity)
@@ -170,6 +189,7 @@ func (r *MongoRepository) Delete(ctx context.Context, entity *Entity) error {
 		filter := bson.D{
 			{"attribute", k},
 			{"value", v},
+			{"accountId", accountID},
 		}
 
 		update := mongo.NewUpdateOneModel()

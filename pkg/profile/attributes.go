@@ -7,7 +7,7 @@ import (
 type Attributes map[string][]string
 
 type AttributesRepository interface {
-	GetAll(context.Context) (Attributes, error)
-	Updater(context.Context, *Entity) error
-	Delete(context.Context, *Entity) error
+	GetAll(ctx context.Context, accountID string) (Attributes, error)
+	Updater(ctx context.Context, accountID string, e *Entity) error
+	Delete(ctx context.Context, accountID string, e *Entity) error
 }
