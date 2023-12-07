@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/dportaluppi/customer-profiles-api/internal/config"
-	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
+	"github.com/dportaluppi/customer-profiles-api/internal/repository"
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
@@ -26,7 +26,7 @@ func insertProfiles(ctx context.Context, profileFile string) error {
 	s := upserter(ctx)
 
 	for p := range pCh {
-		if _, err = s.Create(ctx, &p); err != nil {
+		if _, err = s.Create(ctx, "1", &p); err != nil {
 			return err
 		}
 	}
@@ -36,8 +36,8 @@ func insertProfiles(ctx context.Context, profileFile string) error {
 	return nil
 }
 
-func loadProfiles(profileFile string) (<-chan profile.Profile, error) {
-	profilesChannel := make(chan profile.Profile)
+func loadProfiles(profileFile string) (<-chan profile.Entity, error) {
+	profilesChannel := make(chan profile.Entity)
 
 	f, err := os.Open(profileFile)
 	if err != nil {
@@ -56,7 +56,7 @@ func loadProfiles(profileFile string) (<-chan profile.Profile, error) {
 		}
 
 		for decoder.More() {
-			var p profile.Profile
+			var p profile.Entity
 			if err := decoder.Decode(&p); err != nil {
 				fmt.Println("Error decoding profile:", err)
 				return
@@ -69,7 +69,7 @@ func loadProfiles(profileFile string) (<-chan profile.Profile, error) {
 	return profilesChannel, nil
 }
 
-func upserter(ctx context.Context) profile.Upserter {
+func upserter(ctx context.Context) profile.Saver {
 	cfg, err := config.Load(ctx)
 	if err != nil {
 		panic(err)
@@ -91,7 +91,7 @@ func upserter(ctx context.Context) profile.Upserter {
 	}
 
 	// Profile
-	repo := iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
+	repo := repository.NewMongoRepository[*profile.Entity](mongoClient, cfg.Mongo.DB, "entities")
 
 	// Flattener
 	f := flat.NewFlattener()
@@ -99,5 +99,5 @@ func upserter(ctx context.Context) profile.Upserter {
 	// Attributes
 	attr := profile.NewMongoRepository(ctx, mongoClient, cfg.Mongo.DB, f)
 
-	return profile.NewUpserter(repo, attr)
+	return profile.NewSaver(repo, attr)
 }

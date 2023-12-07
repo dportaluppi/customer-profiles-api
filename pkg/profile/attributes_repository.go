@@ -103,7 +103,7 @@ func (r *MongoRepository) GetAll(ctx context.Context) (Attributes, error) {
 		var stringValues []string
 		for _, v := range values {
 			s, ok := v.(string)
-			if !ok {
+			if v != nil && !ok {
 				return nil, ErrValueConvert
 			}
 
@@ -116,17 +116,17 @@ func (r *MongoRepository) GetAll(ctx context.Context) (Attributes, error) {
 	return result, nil
 }
 
-func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) error {
+func (r *MongoRepository) Updater(ctx context.Context, entity *Entity) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	fp, err := r.flatProfile(profile)
+	fl, err := r.flat(entity)
 	if err != nil {
 		return err
 	}
 
 	var updates []mongo.WriteModel
 
-	for k, v := range fp {
+	for k, v := range fl {
 		filter := bson.D{
 			{"attribute", k},
 			{"value", v},
@@ -156,17 +156,17 @@ func (r *MongoRepository) Updater(ctx context.Context, profile *Profile) error {
 	return nil
 }
 
-func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) error {
+func (r *MongoRepository) Delete(ctx context.Context, entity *Entity) error {
 	coll := r.client.Database(r.db).Collection(r.collection)
 
-	fp, err := r.flatProfile(profile)
+	fl, err := r.flat(entity)
 	if err != nil {
 		return err
 	}
 
 	var updates []mongo.WriteModel
 
-	for k, v := range fp {
+	for k, v := range fl {
 		filter := bson.D{
 			{"attribute", k},
 			{"value", v},
@@ -196,8 +196,8 @@ func (r *MongoRepository) Delete(ctx context.Context, profile *Profile) error {
 	return nil
 }
 
-func (r *MongoRepository) flatProfile(profile *Profile) (map[string]any, error) {
-	b, err := json.Marshal(profile)
+func (r *MongoRepository) flat(entity *Entity) (map[string]any, error) {
+	b, err := json.Marshal(entity)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (r *MongoRepository) flatProfile(profile *Profile) (map[string]any, error) 
 		return nil, err
 	}
 
-	delete(m, "profileId")
+	delete(m, "id")
 	delete(m, "createdAt")
 	delete(m, "updatedAt")
 

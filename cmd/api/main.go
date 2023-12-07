@@ -11,6 +11,7 @@ import (
 
 	"github.com/dportaluppi/customer-profiles-api/internal/config"
 	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
+	"github.com/dportaluppi/customer-profiles-api/internal/repository"
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
@@ -22,15 +23,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// Aerospike client
-	/*
-		client, err := aerospike.NewClient(cfg.Aerospike.Address, cfg.Aerospike.Port)
-		if err != nil {
-			panic(err)
-		}
-		defer client.Close()
-	*/
 
 	// Set up MongoDB client
 	clientOptions := options.Client().
@@ -53,26 +45,28 @@ func main() {
 	// Attributes
 	attr := profile.NewMongoRepository(ctx, mongoClient, cfg.Mongo.DB, f)
 
-	// Profile
-	//repo := iprofile.NewAerospikeRepository(client, cfg.Aerospike.Namespace) // TODO: Remove this line and use only mongo.
-	repo := iprofile.NewMongoRepository(mongoClient, cfg.Mongo.DB)
-	profileHandler := iprofile.NewHandler(
-		profile.NewUpserter(repo, attr),
-		profile.NewDeleter(repo, attr),
-		profile.NewGetter(repo, attr),
+	// Entities
+	router := gin.Default()
+	entities := repository.NewMongoRepository[*profile.Entity](mongoClient, cfg.Mongo.DB, "entities")
+	eHandler := iprofile.NewHandler(
+		profile.NewSaver(entities, attr),
+		profile.NewDeleter(entities, attr),
+		profile.NewGetter(entities, attr),
 	)
 
-	// Routes
-	router := gin.Default()
-	router.POST("/profiles", profileHandler.Create)
-	router.PUT("/profiles/:id", profileHandler.Update)
-	router.DELETE("/profiles/:id", profileHandler.Delete)
-	router.GET("/profiles/:id", profileHandler.GetByID)
-	router.GET("/profiles", profileHandler.GetAll)
-	router.GET("/profiles/keys", profileHandler.GetKeys)
+	router.POST("/accounts/:accountId/entities", eHandler.Create)
+	router.PUT("/accounts/:accountId/entities/:id", eHandler.Update)
+	router.DELETE("/accounts/:accountId/entities/:id", eHandler.Delete)
+	router.GET("/accounts/:accountId/entities/:id", eHandler.GetByID)
+	router.GET("/accounts/:accountId/entities", eHandler.GetAll)
+	router.GET("/accounts/:accountId/entities/keys", eHandler.GetKeys)
 
-	router.POST("/profiles/query", profileHandler.Query)
+	router.POST("/accounts/:accountId/entities/search", eHandler.Query)
+	router.POST("/accounts/:accountId/entities/queries/jsonlogic", eHandler.QueryJsonLogic) // TODO: Remove this endpoint
 
+	// Relationships
+	router.POST("/accounts/:accountId/entities/:id/relationships", eHandler.CreateRelationship)
+	router.PUT("/accounts/:accountId/entities/:id/relationships", eHandler.ReplaceRelationships)
 	if err = router.Run(":8030"); err != nil {
 		panic(err)
 	}

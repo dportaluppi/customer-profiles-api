@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	path                 = "./cmd/batch"
-	profileFile          = "profiles.json"
-	words                = "words.txt"
-	numProfiles          = 100000
-	maxAttributes        = 10
-	maxChannelAttributes = 5
+	path          = "./cmd/batch"
+	profileFile   = "profiles.json"
+	words         = "words.txt"
+	numProfiles   = 100000
+	maxAttributes = 10
 )
 
 var (
-	channelTypes = []string{"whatsapp", "commerce", "engagement"}
+	entityTypes        = []string{"Contact", "Store"}
+	relationshipsTypes = []string{"buys_from", "buys_for", "sells_for"}
 )
 
 func main() {

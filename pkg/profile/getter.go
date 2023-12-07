@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// getter implements the profile retrieval service.
+// getter implements the entity retrieval service.
 type getter struct {
 	repo Repository
 	attr AttributesRepository
@@ -19,35 +19,48 @@ func NewGetter(repo Repository, attr AttributesRepository) Getter {
 	}
 }
 
-func (s *getter) GetByID(ctx context.Context, id string) (*Profile, error) {
+func (s *getter) GetByID(ctx context.Context, accountID, id string) (*Entity, error) {
 	if id == "" {
-		return nil, ErrProfileIDMissing
+		return nil, ErrIDMissing
+	}
+	if accountID == "" {
+		return nil, ErrAccountIDMissing
 	}
 
-	p, err := s.repo.GetByID(ctx, id)
+	p, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+
+	if p.AccountID != accountID {
+		return nil, ErrInvalid
+	}
+
 	return p, nil
 }
 
-func (s *getter) GetAll(ctx context.Context, page, limit int) ([]*Profile, int, error) {
+func (s *getter) GetAll(ctx context.Context, accountId string, page, limit int) ([]*Entity, int, error) {
 	if page < 1 || limit < 1 {
 		return nil, 0, ErrInvalidPaginationParameters
 	}
 
-	profiles, count, err := s.repo.GetAll(ctx, page, limit)
+	entities, count, err := s.repo.GetAll(ctx, accountId, page, limit)
 	if err != nil {
 		return nil, 0, errors.WithStack(err)
 	}
-	return profiles, count, nil
+	return entities, count, nil
 }
 
-func (s *getter) Query(ctx context.Context, query map[string]interface{}, currentPage, perPage int) ([]*Profile, int, error) {
-	// TODO: business logic to query profiles, e.g. check semantic and syntactic validity of query
-	return s.repo.ExecuteQuery(ctx, query, currentPage, perPage)
+func (s *getter) Query(ctx context.Context, accountId string, query map[string]any, currentPage, perPage int) ([]*Entity, int, error) {
+	// TODO: business logic to query entities, e.g. check semantic and syntactic validity of query
+	return s.repo.ExecuteQuery(ctx, accountId, query, currentPage, perPage)
 }
 
-func (s *getter) GetKeys(ctx context.Context) (Attributes, error) {
+func (s *getter) Pipeline(ctx context.Context, accountId string, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error) {
+	// TODO: business logic to query entities, e.g. check semantic and syntactic validity of query
+	return s.repo.ExecutePipeline(ctx, accountId, pipeline, currentPage, perPage)
+}
+
+func (s *getter) GetKeys(ctx context.Context, accountId string) (Attributes, error) {
 	return s.attr.GetAll(ctx)
 }

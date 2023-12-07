@@ -8,6 +8,6 @@ type Attributes map[string][]string
 
 type AttributesRepository interface {
 	GetAll(context.Context) (Attributes, error)
-	Updater(context.Context, *Profile) error
-	Delete(context.Context, *Profile) error
+	Updater(context.Context, *Entity) error
+	Delete(context.Context, *Entity) error
 }

@@ -1,0 +1,1212 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Unified Customer Profile and Segmentation Service",
+    "description": "This API supports up to 5k/sec read and writes, with <100ms round-trip latency for reads.\n",
+    "version": "1.0.0",
+    "license": {
+      "name": "needs to be determined",
+      "url": "https://www.theodi.org/article/what-are-the-impacts-of-non-open-licences/"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/v1",
+      "description": "Replace this with the staging and production server URLs"
+    }
+  ],
+  "security": [
+    {
+      "JWT": []
+    }
+  ],
+  "paths": {
+    "/account/{account_id}/entities/{entityType}/{id}": {
+      "get": {
+        "operationId": "getEntityById",
+        "summary": "Retrieve Entity by ID",
+        "description": "Retrieves a specific entity of the given type by its ID.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "path",
+            "description": "Type of entity (contact, organization, contactChannelUserId)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Entity ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entity retrieved successfully."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertEntityById",
+        "summary": "Upsert Entity by ID",
+        "description": "Creates or updates an entity of the given type by its ID.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "path",
+            "description": "Type of entity (contact, organization, contactChannelUserId)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Entity ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Entity to be upserted.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Entity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entity upserted successfully."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEntityById",
+        "summary": "Delete Entity by ID",
+        "description": "Deletes a specific entity of the given type by its ID.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "path",
+            "description": "Type of entity (contact, organization, contactChannelUserId)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Entity ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Entity deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/entities/{entityType}": {
+      "post": {
+        "operationId": "createEntity",
+        "summary": "Create Entity",
+        "description": "Creates a new entity of the specified type.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "path",
+            "description": "Type of entity (contact, organization, contactChannelUserId)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Entity to be created.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Entity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Entity created successfully."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/entities/search": {
+      "post": {
+        "operationId": "searchEntities",
+        "summary": "Search Entities",
+        "description": "Searches entities based on specified criteria.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Search criteria.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results returned."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/entities/merge": {
+      "post": {
+        "operationId": "mergeEntities",
+        "summary": "Merge Entities",
+        "description": "Merges multiple entities into one.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Criteria for merging entities.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entities merged successfully."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/entities/bulk": {
+      "post": {
+        "operationId": "bulkOperations",
+        "summary": "Bulk Operations",
+        "description": "Performs bulk CRUD operations on entities.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Bulk operations to be performed.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkOperations"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Bulk operation initiated."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/events": {
+      "post": {
+        "operationId": "sendEvent",
+        "summary": "Send Event",
+        "description": "Sends an event to update entities in real-time.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Event details.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Event"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Event received."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/relationships": {
+      "post": {
+        "operationId": "manageRelationships",
+        "summary": "Manage Relationships",
+        "description": "Adds or updates relationships between entities.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Relationship details.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Relationship"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relationship updated."
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/segments": {
+      "post": {
+        "operationId": "createSegment",
+        "summary": "Create a new segment",
+        "description": "Creates a new segment based on provided criteria.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SegmentCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Segment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Segment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      },
+      "get": {
+        "operationId": "listSegments",
+        "summary": "List all segments",
+        "description": "Lists all segments, optionally filtered by certain criteria.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the segment to search for",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of segments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Segment"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/segments/{segmentId}": {
+      "get": {
+        "operationId": "getSegment",
+        "summary": "Retrieve a specific segment",
+        "description": "Retrieves the details of a segment identified by segmentId.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Segment details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Segment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateSegment",
+        "summary": "Update a specific segment",
+        "description": "Updates the segment identified by segmentId with new information.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SegmentCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Segment updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Segment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSegment",
+        "summary": "Delete a specific segment",
+        "description": "Deletes the segment identified by segmentId.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Segment deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/segments/{segmentId}/count": {
+      "get": {
+        "operationId": "countSegment",
+        "summary": "Count entities in a segment",
+        "description": "Returns the count of entities in the segment.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Count of entities in the segment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/segments/{segmentId}/entities": {
+      "get": {
+        "operationId": "listEntitiesInSegment",
+        "summary": "List entities in a segment",
+        "description": "Retrieves all entities currently in the segment, optionally filtered by entity type, excluded types, and timeframe.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "in": "query",
+            "description": "Type of entity to filter by (e.g., contact, organization)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "excludeType",
+            "in": "query",
+            "description": "Type of entity to exclude (e.g., salesperson)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeframe",
+            "in": "query",
+            "description": "Timeframe to filter entities by (e.g., last 3 months)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of entities in the segment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Entity"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/entities/{entityId}/segments": {
+      "get": {
+        "operationId": "listSegmentsForEntity",
+        "summary": "Get segments an entity belongs to",
+        "description": "Retrieves a list of all segments to which a specific entity belongs.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "path",
+            "description": "ID of the entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of segments the entity belongs to",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Segment"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/account/{account_id}/segments/{segmentId}/entities/{entityId}": {
+      "get": {
+        "operationId": "checkSegmentMembership",
+        "summary": "Check entity's membership in a segment",
+        "description": "Checks if a specific entity is part of a given segment.",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The yalo account id for which the report is to be fetched. The authenticated user must be authorized to fetch reports for this account id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentId",
+            "in": "path",
+            "description": "ID of the segment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "path",
+            "description": "ID of the entity",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Membership status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isMember": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Entity": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "description": "Meta information about the entity."
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the entity (contact, organization, contactChannelUserId)."
+          },
+          "attributes": {
+            "type": "object",
+            "description": "Attributes specific to the entity."
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "Relationships with other entities."
+          }
+        }
+      },
+      "Relationship": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of relationship (works for, buys for, supports)."
+          },
+          "targetId": {
+            "type": "string",
+            "description": "ID of the entity this relationship targets."
+          }
+        }
+      },
+      "SearchCriteria": {
+        "type": "object",
+        "description": "Criteria for searching entities.",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Free-text query for searching."
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Filters to apply for the search."
+          }
+        }
+      },
+      "MergeCriteria": {
+        "type": "object",
+        "description": "Criteria for merging entities.",
+        "properties": {
+          "sourceIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of the entities to be merged."
+          },
+          "targetId": {
+            "type": "string",
+            "description": "ID of the target entity into which others will be merged."
+          }
+        }
+      },
+      "BulkOperations": {
+        "type": "object",
+        "description": "Operations for bulk entity CRUD.",
+        "properties": {
+          "create": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            },
+            "description": "Entities to be created."
+          },
+          "update": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Entity"
+            },
+            "description": "Entities to be updated."
+          },
+          "delete": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of entities to be deleted."
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "description": "Event details for real-time updates.",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "description": "Type of event (e.g., purchase, login, etc.)"
+          },
+          "entityId": {
+            "type": "string",
+            "description": "ID of the entity the event is associated with."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time at which the event occurred."
+          },
+          "payload": {
+            "type": "object",
+            "description": "Additional data related to the event."
+          }
+        }
+      },
+      "Segment": {
+        "type": "object",
+        "description": "defines the structure for segment information",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the segment"
+          },
+          "name": {
+            "type": "string",
+            "description": "The human-readable name for the segment"
+          },
+          "criteria": {
+            "$ref": "#/components/schemas/SegmentCriteria",
+            "description": "The criteria defining the segment, referenced from another schema"
+          }
+        }
+      },
+      "SegmentCriteria": {
+        "type": "object",
+        "description": "defines the criteria used for creating or updating segments",
+        "properties": {
+          "filter": {
+            "type": "string",
+            "description": "The filter or condition used to define the segment (e.g., \"purchase_amount > 100\")"
+          },
+          "value": {
+            "type": "string",
+            "description": "The value that works in conjunction with the filter (e.g., a specific product ID or a date range)"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,70 +1,13 @@
 package profile
 
+import "github.com/dportaluppi/customer-profiles-api/pkg"
+
 var (
-	ErrProfileIDMissing            = NewErrID("missing profile id")
-	ErrProfileInvalid              = NewErrInvalid("invalid profile data")
-	ErrNotFound                    = NewErrNotFound("profile not found")
-	ErrProfileConflict             = NewErrConflict("profile conflict occurred")
-	ErrInternalError               = NewErrInternalError("internal error")
-	ErrInvalidPaginationParameters = NewErrInvalid("invalid pagination parameters")
+	ErrIDMissing                   = pkg.NewErrID("missing entity id")
+	ErrAccountIDMissing            = pkg.NewErrID("missing account id")
+	ErrInvalid                     = pkg.NewErrInvalid("invalid entity data")
+	ErrNotFound                    = pkg.NewErrNotFound("entity not found")
+	ErrConflict                    = pkg.NewErrConflict("entity conflict occurred")
+	ErrInternalError               = pkg.NewErrInternalError("entity internal error")
+	ErrInvalidPaginationParameters = pkg.NewErrInvalid("invalid entity pagination parameters")
 )
-
-type ErrIDType struct {
-	msg string
-}
-
-func (e ErrIDType) Error() string {
-	return e.msg
-}
-
-func NewErrID(msg string) ErrIDType {
-	return ErrIDType{msg: msg}
-}
-
-type ErrInvalidType struct {
-	msg string
-}
-
-func (e ErrInvalidType) Error() string {
-	return e.msg
-}
-
-func NewErrInvalid(msg string) ErrInvalidType {
-	return ErrInvalidType{msg: msg}
-}
-
-type ErrNotFoundType struct {
-	msg string
-}
-
-func (e ErrNotFoundType) Error() string {
-	return e.msg
-}
-
-func NewErrNotFound(msg string) ErrNotFoundType {
-	return ErrNotFoundType{msg: msg}
-}
-
-type ErrConflictType struct {
-	msg string
-}
-
-func (e ErrConflictType) Error() string {
-	return e.msg
-}
-
-func NewErrConflict(msg string) ErrConflictType {
-	return ErrConflictType{msg: msg}
-}
-
-type ErrInternalErrorType struct {
-	msg string
-}
-
-func (e ErrInternalErrorType) Error() string {
-	return e.msg
-}
-
-func NewErrInternalError(msg string) ErrInternalErrorType {
-	return ErrInternalErrorType{msg: msg}
-}

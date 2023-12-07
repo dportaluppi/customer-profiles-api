@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
@@ -42,12 +44,14 @@ func mockProfiles(_ context.Context, profileFile, wordsFile string) error {
 	return nil
 }
 
-func createProfile(dictionary []string) profile.Profile {
+func createProfile(dictionary []string) profile.Entity {
 	now := time.Now()
-	p := profile.Profile{
-		Attributes: attributes(maxAttributes, dictionary),
-		Channels:   channels(dictionary),
-		CreatedAt:  &now,
+	p := profile.Entity{
+		Attributes:    attributes(maxAttributes, dictionary),
+		AccountID:     "1",
+		Type:          entityType(),
+		Relationships: relationships(),
+		CreatedAt:     &now,
 	}
 
 	if !isNewProfile() {
@@ -64,13 +68,18 @@ func isNewProfile() bool {
 	return rand.Intn(2) == 0
 }
 
-func channels(dictionary []string) map[string]profile.Channel {
-	result := make(map[string]profile.Channel)
-	for j := 0; j < rand.Intn(len(channelTypes))+1; j++ {
-		result[randomWord(channelTypes)] = profile.Channel{
-			ID:         "",
-			Attributes: attributes(maxChannelAttributes, dictionary),
-		}
+func entityType() string {
+	return entityTypes[rand.Intn(len(entityTypes))]
+}
+
+func relationships() []profile.Relationship {
+	var result []profile.Relationship
+
+	for j := 0; j < rand.Intn(len(relationshipsTypes))+1; j++ {
+		result = append(result, profile.Relationship{
+			Type:     relationshipsTypes[j],
+			TargetID: primitive.NewObjectID().Hex(),
+		})
 	}
 
 	return result

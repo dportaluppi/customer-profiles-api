@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// deleter implements the profile deletion service.
+// deleter implements the entity deletion service.
 type deleter struct {
 	repo Repository
 	attr AttributesRepository
@@ -19,21 +19,24 @@ func NewDeleter(repo Repository, attr AttributesRepository) *deleter {
 	}
 }
 
-func (s *deleter) Delete(ctx context.Context, id string) error {
+func (s *deleter) Delete(ctx context.Context, accountID, id string) error {
 	if id == "" {
-		return ErrProfileIDMissing
+		return ErrIDMissing
 	}
-
-	p, err := s.repo.GetByID(ctx, id)
-	if err != nil {
+	e, err := s.repo.GetByID(ctx, accountID, id)
+	if e == nil {
 		return errors.WithStack(err)
 	}
 
-	if err = s.repo.Delete(ctx, id); err != nil {
+	if e.AccountID != accountID {
+		return ErrInvalid
+	}
+
+	if err = s.repo.Delete(ctx, accountID, id); err != nil {
 		return errors.WithStack(err)
 	}
 
-	if err = s.attr.Delete(ctx, p); err != nil {
+	if err = s.attr.Delete(ctx, e); err != nil {
 		return errors.WithStack(err)
 	}
 
