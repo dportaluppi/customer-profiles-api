@@ -13,6 +13,10 @@ require (
 	go.mongodb.org/mongo-driver v1.12.1
 )
 
+replace (
+	github.com/yalochat/go-commerce-components => /Users/jorgevillafuerte/go/src/github.com/yalochat/go-commerce-components
+)
+
 require (
 	github.com/Shopify/go-lua v0.0.0-20221004153744-91867de107cf // indirect
 	github.com/Shopify/goluago v0.0.0-20230321202001-33a11e5e5c54 // indirect

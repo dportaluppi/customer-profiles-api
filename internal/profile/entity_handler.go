@@ -1,14 +1,16 @@
 package profile
 
 import (
-	"github.com/dportaluppi/customer-profiles-api/pkg"
-	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
-	"github.com/gin-gonic/gin"
-	gojsonlogicmongodb "github.com/kubeesio/go-jsonlogic-mongodb"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	gojsonlogicmongodb "github.com/kubeesio/go-jsonlogic-mongodb"
+	"github.com/pkg/errors"
+
+	"github.com/dportaluppi/customer-profiles-api/pkg"
+	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
 )
 
 // service define business logic for entity.
@@ -40,10 +42,10 @@ func (h *Handler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	accountId := c.Param("accountId")
+	accountID := c.Param("accountId")
 
 	ctx := c.Request.Context()
-	createdUser, err := h.service.Create(ctx, accountId, &e)
+	createdUser, err := h.service.Create(ctx, accountID, &e)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -62,7 +64,7 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	accountId := c.Param("accountId")
+	accountID := c.Param("accountId")
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required for update"})
@@ -70,7 +72,7 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	updatedEntity, err := h.service.Update(ctx, accountId, id, &entity)
+	updatedEntity, err := h.service.Update(ctx, accountID, id, &entity)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -229,11 +231,11 @@ func (h *Handler) CreateRelationship(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	accountId := context.Param("accountId")
+	accountID := context.Param("accountId")
 	entityId := context.Param("id")
 
 	ctx := context.Request.Context()
-	entityWithRelationships, err := h.service.AddRelationship(ctx, accountId, entityId, relationship)
+	entityWithRelationships, err := h.service.AddRelationship(ctx, accountID, entityId, relationship)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -249,11 +251,11 @@ func (h *Handler) ReplaceRelationships(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	accountId := context.Param("accountId")
+	accountID := context.Param("accountId")
 	entityId := context.Param("id")
 
 	ctx := context.Request.Context()
-	entityWithRelationships, err := h.service.ReplaceRelationships(ctx, accountId, entityId, newRelationships)
+	entityWithRelationships, err := h.service.ReplaceRelationships(ctx, accountID, entityId, newRelationships)
 	if err != nil {
 		err = errors.WithStack(err)
 		log.Printf("%+v", err)
@@ -261,4 +263,17 @@ func (h *Handler) ReplaceRelationships(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, entityWithRelationships)
+}
+
+func (h *Handler) GetKeys(c *gin.Context) {
+	ctx := c.Request.Context()
+	keys, err := h.service.GetKeys(ctx, c.Param("accountId"))
+	if err != nil {
+		err = errors.WithStack(err)
+		log.Printf("%+v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, keys)
 }

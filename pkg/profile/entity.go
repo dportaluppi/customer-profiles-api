@@ -84,6 +84,7 @@ type Deleter interface {
 }
 
 type Getter interface {
+	GetKeys(ctx context.Context, accountId string) (Attributes, error)
 	GetByID(ctx context.Context, accountId, id string) (*Entity, error)
 	GetAll(ctx context.Context, accountId string, page, limit int) ([]*Entity, int, error)
 	Query(ctx context.Context, accountId string, query map[string]any, currentPage, perPage int) ([]*Entity, int, error)

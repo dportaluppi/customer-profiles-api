@@ -4,14 +4,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aerospike/aerospike-client-go/v6"
+	"github.com/gin-gonic/gin"
+	"github.com/yalochat/go-commerce-components/flat"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"github.com/dportaluppi/customer-profiles-api/internal/config"
 	iprofile "github.com/dportaluppi/customer-profiles-api/internal/profile"
 	"github.com/dportaluppi/customer-profiles-api/internal/repository"
 	"github.com/dportaluppi/customer-profiles-api/pkg/profile"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -22,13 +23,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// Aerospike client
-	client, err := aerospike.NewClient(cfg.Aerospike.Address, cfg.Aerospike.Port)
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
 
 	// Set up MongoDB client
 	clientOptions := options.Client().
@@ -45,19 +39,27 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Flattener
+	f := flat.NewFlattener()
+
+	// Attributes
+	attr := profile.NewMongoRepository(ctx, mongoClient, cfg.Mongo.DB, f)
+
 	// Entities
 	router := gin.Default()
 	entities := repository.NewMongoRepository[*profile.Entity](mongoClient, cfg.Mongo.DB, "entities")
 	eHandler := iprofile.NewHandler(
-		profile.NewSaver(entities),
-		profile.NewDeleter(entities),
-		profile.NewGetter(entities),
+		profile.NewSaver(entities, attr),
+		profile.NewDeleter(entities, attr),
+		profile.NewGetter(entities, attr),
 	)
+
 	router.POST("/accounts/:accountId/entities", eHandler.Create)
 	router.PUT("/accounts/:accountId/entities/:id", eHandler.Update)
 	router.DELETE("/accounts/:accountId/entities/:id", eHandler.Delete)
 	router.GET("/accounts/:accountId/entities/:id", eHandler.GetByID)
 	router.GET("/accounts/:accountId/entities", eHandler.GetAll)
+	router.GET("/accounts/:accountId/entities/keys", eHandler.GetKeys)
 
 	router.POST("/accounts/:accountId/entities/search", eHandler.Query)
 	router.POST("/accounts/:accountId/entities/queries/jsonlogic", eHandler.QueryJsonLogic) // TODO: Remove this endpoint

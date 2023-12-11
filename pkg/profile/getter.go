@@ -2,16 +2,21 @@ package profile
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 )
 
 // getter implements the entity retrieval service.
 type getter struct {
 	repo Repository
+	attr AttributesRepository
 }
 
-func NewGetter(repo Repository) Getter {
-	return &getter{repo: repo}
+func NewGetter(repo Repository, attr AttributesRepository) Getter {
+	return &getter{
+		repo: repo,
+		attr: attr,
+	}
 }
 
 func (s *getter) GetByID(ctx context.Context, accountID, id string) (*Entity, error) {
@@ -54,4 +59,8 @@ func (s *getter) Query(ctx context.Context, accountId string, query map[string]a
 func (s *getter) Pipeline(ctx context.Context, accountId string, pipeline map[string]any, currentPage, perPage int) ([]*Entity, int, error) {
 	// TODO: business logic to query entities, e.g. check semantic and syntactic validity of query
 	return s.repo.ExecutePipeline(ctx, accountId, pipeline, currentPage, perPage)
+}
+
+func (s *getter) GetKeys(ctx context.Context, accountId string) (Attributes, error) {
+	return s.attr.GetAll(ctx, accountId)
 }

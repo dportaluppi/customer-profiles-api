@@ -2,16 +2,21 @@ package profile
 
 import (
 	"context"
+
 	errstack "github.com/pkg/errors"
 )
 
 // saver implements the entity saver service.
 type saver struct {
 	repo Repository
+	attr AttributesRepository
 }
 
-func NewSaver(repo Repository) *saver {
-	return &saver{repo: repo}
+func NewSaver(repo Repository, attr AttributesRepository) *saver {
+	return &saver{
+		repo: repo,
+		attr: attr,
+	}
 }
 
 func (s *saver) Create(ctx context.Context, accountID string, entity *Entity) (*Entity, error) {
@@ -19,14 +24,23 @@ func (s *saver) Create(ctx context.Context, accountID string, entity *Entity) (*
 	if accountID == "" {
 		return nil, ErrAccountIDMissing
 	}
+
 	if entity == nil {
 		return nil, ErrInvalid
 	}
+
 	entity.AccountID = accountID
+
 	p, err := s.repo.Upsert(ctx, accountID, entity)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	err = s.attr.Updater(ctx, accountID, p)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return p, nil
 }
 
@@ -48,6 +62,11 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 		return nil, ErrInvalid
 	}
 
+	err = s.attr.Delete(ctx, accountID, oldEntity)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	entity.ID = oldEntity.ID
 	entity.AccountID = oldEntity.AccountID
 	entity.CreatedAt = oldEntity.CreatedAt
@@ -57,11 +76,17 @@ func (s *saver) Update(ctx context.Context, accountID, id string, entity *Entity
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	err = s.attr.Updater(ctx, accountID, p)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return p, nil
 }
 
-func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relationship Relationship) (*Entity, error) {
-	e, err := s.repo.GetByID(ctx, accountId, id)
+func (s *saver) AddRelationship(ctx context.Context, accountID, id string, relationship Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountID, id)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
@@ -70,24 +95,46 @@ func (s *saver) AddRelationship(ctx context.Context, accountId, id string, relat
 		return e, nil
 	}
 
-	e, err = s.repo.Upsert(ctx, accountId, e)
+	err = s.attr.Delete(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	e, err = s.repo.Upsert(ctx, accountID, e)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
+	err = s.attr.Updater(ctx, accountID, e)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return e, nil
 }
 
-func (s *saver) ReplaceRelationships(ctx context.Context, accountId, id string, relationships []Relationship) (*Entity, error) {
-	e, err := s.repo.GetByID(ctx, accountId, id)
+func (s *saver) ReplaceRelationships(ctx context.Context, accountID, id string, relationships []Relationship) (*Entity, error) {
+	e, err := s.repo.GetByID(ctx, accountID, id)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
+	err = s.attr.Delete(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
 
 	e.Relationships = relationships
 
-	e, err = s.repo.Upsert(ctx, accountId, e)
+	e, err = s.repo.Upsert(ctx, accountID, e)
 	if err != nil {
 		return nil, errstack.WithStack(err)
 	}
+
+	err = s.attr.Updater(ctx, accountID, e)
+	if err != nil {
+		return nil, errstack.WithStack(err)
+	}
+
 	return e, nil
 }
